@@ -27,11 +27,11 @@ pipeline {
         failure {
             script {
                 if (FAILURE_STAGE == 'Testing') {
-                    mail to: "${params.TESTER_EMAIL}",
+                    mail to: "${env.TESTER_EMAIL}",
                          subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
                          body: "The Test stage failed. Please check the logs at ${env.BUILD_URL}"
                 } else if (FAILURE_STAGE == 'Build') {
-                    mail to: "${params.BUILDER_EMAIL}",
+                    mail to: "${env.BUILDER_EMAIL}",
                          subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
                          body: "The Build/Package stage failed. Please check the logs at ${env.BUILD_URL}"
                 }
