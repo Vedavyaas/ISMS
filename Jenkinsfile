@@ -11,14 +11,14 @@ pipeline {
 
     stages {
         stage('Testing') {
-            script {FAILURE_STAGE = 'Testing'}
             steps {
+                script { FAILURE_STAGE = 'Testing' }
                 sh 'mvn clean test'
             }
         }
         stage('Build') {
-            script {FAILURE_STAGE = 'Build'}
             steps {
+                script { FAILURE_STAGE = 'Build' }
                 sh 'mvn clean package'
             }
         }
@@ -35,7 +35,9 @@ pipeline {
                          subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
                          body: "The Build/Package stage failed. Please check the logs at ${env.BUILD_URL}"
                 }
+            }
         }
+
         success {
             echo 'Build and Test were successful!'
         }
