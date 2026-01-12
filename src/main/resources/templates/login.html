@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login</title>
+    <link rel="stylesheet" href="/css/auth.css" />
+</head>
+<body>
+<div class="page">
+    <main class="card" aria-label="Login">
+        <h1 class="title">Login</h1>
+        <p class="subtitle">Enter your username and password.</p>
+
+        <form id="loginForm" class="form" autocomplete="on">
+            <label class="label" for="username">Username</label>
+            <input class="input" id="username" name="username" type="text" required />
+
+            <label class="label" for="password">Password</label>
+            <input class="input" id="password" name="password" type="password" required />
+
+            <button class="button" type="submit">Sign in</button>
+        </form>
+
+        <div id="msg" class="message" role="status" aria-live="polite" hidden></div>
+
+        <div class="links">
+            <a class="link" href="/forgot-password">Forgot password?</a>
+        </div>
+    </main>
+</div>
+
+<script>
+    const form = document.getElementById('loginForm');
+    const msg = document.getElementById('msg');
+
+    function showMessage(text, kind) {
+        msg.textContent = text;
+        msg.className = `message ${kind}`;
+        msg.hidden = false;
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        msg.hidden = true;
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            showMessage('Please enter username and password.', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch('/authenticate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (!res.ok) {
+                showMessage('Invalid username or password.', 'error');
+                return;
+            }
+
+            const data = await res.json();
+            // Token is stored for future authenticated calls; not displayed in UI.
+            if (data && data.token) {
+                localStorage.setItem('isms.jwt', data.token);
+            }
+
+            showMessage('Login successful.', 'success');
+        } catch (_) {
+            showMessage('Unable to sign in. Please try again.', 'error');
+        }
+    });
+</script>
+</body>
+</html>
