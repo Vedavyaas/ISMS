@@ -1,6 +1,7 @@
 package com.adl.isms.repository;
 
 import com.adl.isms.assests.EnrolmentStatus;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
