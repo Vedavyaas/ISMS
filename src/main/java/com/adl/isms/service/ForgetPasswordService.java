@@ -21,6 +21,7 @@ public class ForgetPasswordService {
 
         if (userEntity.isPresent()) {
             UserEntity user = userEntity.get();
+            if(newPassword == null || newPassword.isEmpty()) return "Invalid Password";
             user.setPassword(passwordEncoder.encode(newPassword));
 
             userRepository.save(user);
