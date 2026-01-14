@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ISMS Dashboard</title>
+    <link rel="stylesheet" href="/css/auth.css" />
+    <style>
+        .card { max-width: 720px; }
+        .row { display: grid; grid-template-columns: 1fr; gap: 14px; }
+        @media (min-width: 860px) { .row { grid-template-columns: 1fr 1fr; } }
+        .section-title { margin: 0 0 10px 0; font-size: 14px; color: rgba(233, 238, 252, 0.85); }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .toolbar .link { font-size: 13px; }
+        .small { font-size: 12px; color: rgba(233, 238, 252, 0.7); }
+        .button.secondary { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); }
+            .placeholder { margin-top: 14px; padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.14); }
+            .placeholder h2 { margin: 0 0 6px 0; font-size: 14px; }
+            .placeholder p { margin: 0; font-size: 12px; color: rgba(233, 238, 252, 0.7); }
+    </style>
+</head>
+<body>
+<div class="page">
+    <main class="card" aria-label="Dashboard">
+        <div class="toolbar">
+            <div>
+                <h1 class="title">Dashboard</h1>
+                    <div id="subtitle" class="small">Welcome to ISMS.</div>
+            </div>
+            <button id="logoutBtn" class="button secondary" type="button">Logout</button>
+        </div>
+
+        <div class="row">
+            <section>
+                <h2 class="section-title">Students CSV</h2>
+                <form id="studentsForm" class="form">
+                    <label class="label" for="studentsFile">Choose CSV file</label>
+                    <input class="input" id="studentsFile" type="file" accept=".csv,text/csv" required />
+                    <button class="button" type="submit">Upload Students</button>
+                </form>
+            </section>
+
+            <section>
+                <h2 class="section-title">Faculties CSV</h2>
+                <form id="facultiesForm" class="form">
+                    <label class="label" for="facultiesFile">Choose CSV file</label>
+                    <input class="input" id="facultiesFile" type="file" accept=".csv,text/csv" required />
+                    <button class="button" type="submit">Upload Faculties</button>
+                </form>
+            </section>
+        </div>
+
+            <div id="nonAdminContent" class="placeholder" hidden>
+                <h2 id="roleTitle">Dashboard</h2>
+                <p id="roleMessage">More features are coming soon. You’re logged in and ready.</p>
+            </div>
+
+        <div id="msg" class="message" role="status" aria-live="polite" hidden></div>
+
+        <div class="links" style="justify-content: flex-start; margin-top: 10px;">
+            <a class="link" href="/login">Back to login</a>
+        </div>
+    </main>
+</div>
+
+<script>
+    const TOKEN_KEY = 'isms.jwt';
+
+    const msg = document.getElementById('msg');
+    const studentsForm = document.getElementById('studentsForm');
+    const facultiesForm = document.getElementById('facultiesForm');
+    const logoutBtn = document.getElementById('logoutBtn');
+        const subtitle = document.getElementById('subtitle');
+        const nonAdminContent = document.getElementById('nonAdminContent');
+    const roleTitle = document.getElementById('roleTitle');
+    const roleMessage = document.getElementById('roleMessage');
+
+    function token() {
+        return localStorage.getItem(TOKEN_KEY);
+    }
+
+    function decodeJwtPayload(jwt) {
+        try {
+            const parts = (jwt || '').split('.');
+            if (parts.length !== 3) return null;
+
+            const base64Url = parts[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+            const json = atob(padded);
+            return JSON.parse(json);
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function isAdminToken(jwt) {
+        const payload = decodeJwtPayload(jwt);
+        const scope = payload && payload.scope;
+        if (!scope) return false;
+        return String(scope).split(' ').includes('ROLE_ADMIN');
+    }
+
+    function rolesFromToken(jwt) {
+        const payload = decodeJwtPayload(jwt);
+        const scope = payload && payload.scope;
+        if (!scope) return [];
+        return String(scope).split(' ').filter(Boolean);
+    }
+
+    function requireTokenOrRedirect() {
+        if (!token()) {
+            window.location.replace('/login');
+        }
+    }
+
+    function hideCsvUi() {
+        const row = document.querySelector('.row');
+        if (row) row.style.display = 'none';
+    }
+
+        function showNonAdminContent() {
+            if (nonAdminContent) nonAdminContent.hidden = false;
+        }
+
+    function showMessage(text, kind) {
+        msg.textContent = text;
+        msg.className = `message ${kind}`;
+        msg.hidden = false;
+    }
+
+    async function uploadCsv(endpoint, fileInputId) {
+        msg.hidden = true;
+
+        const jwt = token();
+        if (!jwt) {
+            requireTokenOrRedirect();
+            return;
+        }
+
+        const fileInput = document.getElementById(fileInputId);
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) {
+            showMessage('Please choose a CSV file.', 'error');
+            return;
+        }
+
+        const body = new FormData();
+        body.append('file', file);
+
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${jwt}`
+            },
+            body
+        });
+
+        const text = await res.text();
+
+        if (res.status === 401) {
+            localStorage.removeItem(TOKEN_KEY);
+            showMessage('Session expired. Please log in again.', 'error');
+            setTimeout(() => window.location.replace('/login'), 600);
+            return;
+        }
+
+        showMessage(text || 'Request completed.', res.ok ? 'success' : 'error');
+    }
+
+    studentsForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            await uploadCsv('/students/csv', 'studentsFile');
+        } catch (_) {
+            showMessage('Upload failed. Please try again.', 'error');
+        }
+    });
+
+    facultiesForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            await uploadCsv('/faculties/csv', 'facultiesFile');
+        } catch (_) {
+            showMessage('Upload failed. Please try again.', 'error');
+        }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem(TOKEN_KEY);
+        window.location.replace('/login');
+    });
+
+    requireTokenOrRedirect();
+        // Only admins should see the CSV upload UI.
+    const jwt = token();
+    const roles = rolesFromToken(jwt);
+    const isAdmin = roles.includes('ROLE_ADMIN');
+        if (!isAdmin) {
+            hideCsvUi();
+            showNonAdminContent();
+        if (roles.includes('ROLE_FACULTY')) {
+            if (subtitle) subtitle.textContent = 'Welcome, Faculty.';
+            if (roleTitle) roleTitle.textContent = 'Faculty Dashboard';
+            if (roleMessage) roleMessage.textContent = 'More features are coming soon. You’re logged in and ready.';
+        } else {
+            // Default to student experience.
+            if (subtitle) subtitle.textContent = 'Welcome, Student.';
+            if (roleTitle) roleTitle.textContent = 'Student Dashboard';
+            if (roleMessage) roleMessage.textContent = 'More features are coming soon. You’re logged in and ready.';
+        }
+            showMessage('Logged in successfully.', 'success');
+        } else {
+            if (subtitle) subtitle.textContent = 'Admin tools';
+        }
+</script>
+</body>
+</html>

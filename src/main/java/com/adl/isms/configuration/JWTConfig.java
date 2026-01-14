@@ -34,7 +34,7 @@ public class JWTConfig {
         http.authorizeHttpRequests(authorizeRequests -> authorizeRequests
             .requestMatchers("/h2-console/**", "/password/reset/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/authenticate").permitAll()
-            .requestMatchers(HttpMethod.GET, "/login", "/forgot-password", "/").permitAll()
+            .requestMatchers(HttpMethod.GET, "/login", "/forgot-password", "/", "/dashboard").permitAll()
             .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                 .anyRequest().authenticated());
         http.oauth2ResourceServer(oath2 -> oath2.jwt(Customizer.withDefaults()));

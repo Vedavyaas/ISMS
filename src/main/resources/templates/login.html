@@ -73,6 +73,9 @@
             }
 
             showMessage('Login successful.', 'success');
+            setTimeout(() => {
+                window.location.assign('/dashboard');
+            }, 250);
         } catch (_) {
             showMessage('Unable to sign in. Please try again.', 'error');
         }
