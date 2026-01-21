@@ -50,6 +50,68 @@
             </section>
         </div>
 
+        <!-- Admin-only: Add/Update Single Student -->
+        <div id="adminSingleStudent" style="display:none; margin-top:24px;">
+            <section>
+                <h2 class="section-title">Add/Update Student</h2>
+                <form id="singleStudentForm" class="form">
+                    <label class="label" for="studentName">Name</label>
+                    <input class="input" id="studentName" name="name" type="text" required />
+                    <label class="label" for="studentDob">Date of Birth</label>
+                    <input class="input" id="studentDob" name="dateOfBirth" type="date" required />
+                    <label class="label" for="studentEmail">Email</label>
+                    <input class="input" id="studentEmail" name="email" type="email" required />
+                    <label class="label" for="studentStatus">Enrolment Status</label>
+                    <select class="input" id="studentStatus" name="enrolmentStatus" required>
+                        <option value="PENDING">Pending</option>
+                        <option value="ACTIVELY_STUDYING">Actively Studying</option>
+                        <option value="COMPLETED_STUDY">Completed Study</option>
+                    </select>
+                    <button class="button" type="submit">Add/Update Student</button>
+                </form>
+            </section>
+        </div>
+
+        <!-- Admin-only: Add/Update Single Faculty -->
+        <div id="adminSingleFaculty" style="display:none; margin-top:24px;">
+            <section>
+                <h2 class="section-title">Add/Update Faculty</h2>
+                <form id="singleFacultyForm" class="form">
+                    <label class="label" for="facultyName">Name</label>
+                    <input class="input" id="facultyName" name="name" type="text" required />
+                    <label class="label" for="facultyEmail">Email</label>
+                    <input class="input" id="facultyEmail" name="email" type="email" required />
+                    <label class="label" for="facultyDepartment">Department</label>
+                    <select class="input" id="facultyDepartment" name="department" required>
+                        <option value="CSE">CSE</option>
+                        <option value="ECE">ECE</option>
+                        <option value="EEE">EEE</option>
+                        <option value="CIVIL">CIVIL</option>
+                        <option value="MECHANICAL">MECHANICAL</option>
+                        <option value="AUTOMOBILE">AUTOMOBILE</option>
+                        <option value="PRODUCTION">PRODUCTION</option>
+                        <option value="IT">IT</option>
+                        <option value="AIML">AIML</option>
+                        <option value="BIOMEDICAL">BIOMEDICAL</option>
+                        <option value="TEXTILE">TEXTILE</option>
+                        <option value="FASHION">FASHION</option>
+                    </select>
+                    <label class="label" for="facultyDesignation">Designation</label>
+                    <select class="input" id="facultyDesignation" name="designation" required>
+                        <option value="PRINCIPAL">Principal</option>
+                        <option value="DEAN">Dean</option>
+                        <option value="HOD">HOD</option>
+                        <option value="PROFESSOR">Professor</option>
+                        <option value="ASSOCIATE_PROFESSOR">Associate Professor</option>
+                        <option value="ASSISTANT_PROFESSOR">Assistant Professor</option>
+                        <option value="LECTURER">Lecturer</option>
+                        <option value="LAB_ASSISTANT">Lab Assistant</option>
+                    </select>
+                    <button class="button" type="submit">Add/Update Faculty</button>
+                </form>
+            </section>
+        </div>
+
             <div id="nonAdminContent" class="placeholder" hidden>
                 <h2 id="roleTitle">Dashboard</h2>
                 <p id="roleMessage">More features are coming soon. You’re logged in and ready.</p>
@@ -192,13 +254,13 @@
     });
 
     requireTokenOrRedirect();
-        // Only admins should see the CSV upload UI.
+    // Only admins should see the CSV upload UI and single add/update forms.
     const jwt = token();
     const roles = rolesFromToken(jwt);
     const isAdmin = roles.includes('ROLE_ADMIN');
-        if (!isAdmin) {
-            hideCsvUi();
-            showNonAdminContent();
+    if (!isAdmin) {
+        hideCsvUi();
+        showNonAdminContent();
         if (roles.includes('ROLE_FACULTY')) {
             if (subtitle) subtitle.textContent = 'Welcome, Faculty.';
             if (roleTitle) roleTitle.textContent = 'Faculty Dashboard';
@@ -209,10 +271,67 @@
             if (roleTitle) roleTitle.textContent = 'Student Dashboard';
             if (roleMessage) roleMessage.textContent = 'More features are coming soon. You’re logged in and ready.';
         }
-            showMessage('Logged in successfully.', 'success');
-        } else {
-            if (subtitle) subtitle.textContent = 'Admin tools';
-        }
+        showMessage('Logged in successfully.', 'success');
+    } else {
+        if (subtitle) subtitle.textContent = 'Admin tools';
+        // Show admin-only forms
+        document.getElementById('adminSingleStudent').style.display = '';
+        document.getElementById('adminSingleFaculty').style.display = '';
+    }
+
+    // Admin-only: handle single student add/update
+    const singleStudentForm = document.getElementById('singleStudentForm');
+    if (singleStudentForm) {
+        singleStudentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msg.hidden = true;
+            const jwt = token();
+            if (!jwt) { requireTokenOrRedirect(); return; }
+            const data = {
+                name: document.getElementById('studentName').value,
+                dateOfBirth: document.getElementById('studentDob').value,
+                email: document.getElementById('studentEmail').value,
+                enrolmentStatus: document.getElementById('studentStatus').value
+            };
+            const res = await fetch('/student/csv', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwt}`
+                },
+                body: JSON.stringify(data)
+            });
+            const text = await res.text();
+            showMessage(text || 'Request completed.', res.ok ? 'success' : 'error');
+        });
+    }
+
+    // Admin-only: handle single faculty add/update
+    const singleFacultyForm = document.getElementById('singleFacultyForm');
+    if (singleFacultyForm) {
+        singleFacultyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msg.hidden = true;
+            const jwt = token();
+            if (!jwt) { requireTokenOrRedirect(); return; }
+            const data = {
+                name: document.getElementById('facultyName').value,
+                email: document.getElementById('facultyEmail').value,
+                department: document.getElementById('facultyDepartment').value,
+                designation: document.getElementById('facultyDesignation').value
+            };
+            const res = await fetch('/faculty/csv', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwt}`
+                },
+                body: JSON.stringify(data)
+            });
+            const text = await res.text();
+            showMessage(text || 'Request completed.', res.ok ? 'success' : 'error');
+        });
+    }
 </script>
 </body>
 </html>

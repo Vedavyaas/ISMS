@@ -15,6 +15,7 @@ public class StudentEntity {
     private UserEntity userId;
     private String name;
     private LocalDate dateOfBirth;
+    @Column(unique = true)
     private String email;
     @Enumerated(EnumType.STRING)
     private EnrolmentStatus enrolmentStatus;

@@ -1,4 +1,4 @@
-name,department,designation
-Dr. Alan Turing,CSE,PROFESSOR
-Dr. Emily Blunt,BIOMEDICAL,HOD
-Robert Oppenheimer,MECHANICAL,LAB_ASSISTANT
+name,email,department,designation
+Dr. Alan Turing,alan@staff.com,CSE,PROFESSOR
+Dr. Emily Blunt,emilyBlunt@staff.com,BIOMEDICAL,HOD
+Robert Oppenheimer,robertOppenheimer@staff.com,MECHANICAL,LAB_ASSISTANT

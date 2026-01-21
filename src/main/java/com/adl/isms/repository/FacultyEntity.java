@@ -16,6 +16,7 @@ public class FacultyEntity {
     private UserEntity user;
 
     private String name;
+    private String email;
     @Enumerated(EnumType.STRING)
     private Department department;
 
@@ -25,9 +26,10 @@ public class FacultyEntity {
     public FacultyEntity() {
     }
 
-    public FacultyEntity(UserEntity user, String name, Department department, Designation designation) {
+    public FacultyEntity(UserEntity user, String name, String email, Department department, Designation designation) {
         this.user = user;
         this.name = name;
+        this.email = email;
         this.department = department;
         this.designation = designation;
     }
@@ -54,6 +56,14 @@ public class FacultyEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public Department getDepartment() {
