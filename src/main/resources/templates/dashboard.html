@@ -1,337 +1,471 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ISMS Dashboard</title>
     <link rel="stylesheet" href="/css/auth.css" />
-    <style>
-        .card { max-width: 720px; }
-        .row { display: grid; grid-template-columns: 1fr; gap: 14px; }
-        @media (min-width: 860px) { .row { grid-template-columns: 1fr 1fr; } }
-        .section-title { margin: 0 0 10px 0; font-size: 14px; color: rgba(233, 238, 252, 0.85); }
-        .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .toolbar .link { font-size: 13px; }
-        .small { font-size: 12px; color: rgba(233, 238, 252, 0.7); }
-        .button.secondary { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); }
-            .placeholder { margin-top: 14px; padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.14); }
-            .placeholder h2 { margin: 0 0 6px 0; font-size: 14px; }
-            .placeholder p { margin: 0; font-size: 12px; color: rgba(233, 238, 252, 0.7); }
-    </style>
 </head>
+
 <body>
-<div class="page">
-    <main class="card" aria-label="Dashboard">
-        <div class="toolbar">
-            <div>
-                <h1 class="title">Dashboard</h1>
-                    <div id="subtitle" class="small">Welcome to ISMS.</div>
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span style="color:var(--text-muted); margin-right:6px;">//</span> ISMS
+        </div>
+
+        <!-- Role-specific links injected here -->
+        <div class="nav-menu" id="navMenu"></div>
+
+        <div class="nav-user">
+            <div id="userRoleBadge" class="user-badge">Loading...</div>
+            <button id="logoutBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 11px;">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="main-container">
+        <!-- Flash Message Area -->
+        <div id="msg" class="message hidden" role="status" aria-live="polite"></div>
+
+        <!-- 
+             TAB: Data Import (Admin Only)
+             Contains: Student/Faculty CSV & Single Add Forms
+        -->
+        <div id="view-import" class="tab-content hidden">
+            <div class="grid-2">
+                <!-- Students Group -->
+                <div>
+                    <div class="card-panel">
+                        <h3 class="card-title">Import Students CSV</h3>
+                        <form id="studentsForm">
+                            <div class="form-group">
+                                <input class="input" id="studentsFile" type="file" accept=".csv,text/csv" required />
+                            </div>
+                            <button class="btn" type="submit">Upload List</button>
+                        </form>
+                    </div>
+                    <div class="card-panel">
+                        <h3 class="card-title">Add Single Student</h3>
+                        <form id="singleStudentForm">
+                            <div class="form-group">
+                                <label class="label">Full Name</label>
+                                <input class="input" id="studentName" type="text" required />
+                            </div>
+                            <div class="grid-2" style="margin-bottom:12px;">
+                                <div>
+                                    <label class="label">DOB</label>
+                                    <input class="input" id="studentDob" type="date" required />
+                                </div>
+                                <div>
+                                    <label class="label">Email</label>
+                                    <input class="input" id="studentEmail" type="email" required />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="label">Status</label>
+                                <select class="input" id="studentStatus" required>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="ACTIVELY_STUDYING">Active</option>
+                                    <option value="COMPLETED_STUDY">Completed</option>
+                                </select>
+                            </div>
+                            <button class="btn" type="submit">Save Student</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Faculty Group -->
+                <div>
+                    <div class="card-panel">
+                        <h3 class="card-title">Import Faculty CSV</h3>
+                        <form id="facultiesForm">
+                            <div class="form-group">
+                                <input class="input" id="facultiesFile" type="file" accept=".csv,text/csv" required />
+                            </div>
+                            <button class="btn" type="submit">Upload List</button>
+                        </form>
+                    </div>
+                    <div class="card-panel">
+                        <h3 class="card-title">Add Single Faculty</h3>
+                        <form id="singleFacultyForm">
+                            <div class="form-group">
+                                <label class="label">Full Name</label>
+                                <input class="input" id="facultyName" type="text" required />
+                            </div>
+                            <div class="form-group">
+                                <label class="label">Email</label>
+                                <input class="input" id="facultyEmail" type="email" required />
+                            </div>
+                            <div class="grid-2" style="margin-bottom:12px;">
+                                <div>
+                                    <label class="label">Department</label>
+                                    <select class="input" id="facultyDepartment" required>
+                                        <option value="CSE">CSE</option>
+                                        <option value="ECE">ECE</option>
+                                        <option value="IT">IT</option>
+                                        <option value="AIML">AIML</option>
+                                        <option value="MECHANICAL">MECHANICAL</option>
+                                        <option value="CIVIL">CIVIL</option>
+                                        <option value="EEE">EEE</option>
+                                        <option value="BIOMEDICAL">BIOMEDICAL</option>
+                                        <option value="PRODUCTION">PRODUCTION</option>
+                                        <option value="AUTOMOBILE">AUTOMOBILE</option>
+                                        <option value="TEXTILE">TEXTILE</option>
+                                        <option value="FASHION">FASHION</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="label">Role</label>
+                                    <select class="input" id="facultyDesignation" required>
+                                        <option value="PROFESSOR">Professor</option>
+                                        <option value="ASSOCIATE_PROFESSOR">Assoc. Prof</option>
+                                        <option value="ASSISTANT_PROFESSOR">Asst. Prof</option>
+                                        <option value="HOD">HOD</option>
+                                        <option value="DEAN">Dean</option>
+                                        <option value="PRINCIPAL">Principal</option>
+                                        <option value="LECTURER">Lecturer</option>
+                                        <option value="LAB_ASSISTANT">Lab Asst</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="btn" type="submit">Save Faculty</button>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <button id="logoutBtn" class="button secondary" type="button">Logout</button>
         </div>
 
-        <div class="row">
-            <section>
-                <h2 class="section-title">Students CSV</h2>
-                <form id="studentsForm" class="form">
-                    <label class="label" for="studentsFile">Choose CSV file</label>
-                    <input class="input" id="studentsFile" type="file" accept=".csv,text/csv" required />
-                    <button class="button" type="submit">Upload Students</button>
+        <!-- 
+             TAB: Course Administration (Admin Only)
+             Contains: Add Course Form + Course Table
+        -->
+        <div id="view-course-admin" class="tab-content hidden">
+            <!-- Add Course -->
+            <div class="card-panel">
+                <h3 class="card-title">Create New Course</h3>
+                <form id="addCourseForm" style="display:flex; gap:12px; align-items:flex-end;">
+                    <div style="flex:2;">
+                        <label class="label">Course Name</label>
+                        <input class="input" id="courseName" type="text" placeholder="e.g. Adv. Algorithms" required />
+                    </div>
+                    <div style="flex:1;">
+                        <label class="label">Code</label>
+                        <input class="input" id="courseCode" type="text" placeholder="CS202" required />
+                    </div>
+                    <div style="flex:1;">
+                        <label class="label">Credits</label>
+                        <input class="input" id="courseCredits" type="number" min="1" max="10" placeholder="4"
+                            required />
+                    </div>
+                    <button class="btn" type="submit">Create</button>
                 </form>
-            </section>
-
-            <section>
-                <h2 class="section-title">Faculties CSV</h2>
-                <form id="facultiesForm" class="form">
-                    <label class="label" for="facultiesFile">Choose CSV file</label>
-                    <input class="input" id="facultiesFile" type="file" accept=".csv,text/csv" required />
-                    <button class="button" type="submit">Upload Faculties</button>
-                </form>
-            </section>
-        </div>
-
-        <!-- Admin-only: Add/Update Single Student -->
-        <div id="adminSingleStudent" style="display:none; margin-top:24px;">
-            <section>
-                <h2 class="section-title">Add/Update Student</h2>
-                <form id="singleStudentForm" class="form">
-                    <label class="label" for="studentName">Name</label>
-                    <input class="input" id="studentName" name="name" type="text" required />
-                    <label class="label" for="studentDob">Date of Birth</label>
-                    <input class="input" id="studentDob" name="dateOfBirth" type="date" required />
-                    <label class="label" for="studentEmail">Email</label>
-                    <input class="input" id="studentEmail" name="email" type="email" required />
-                    <label class="label" for="studentStatus">Enrolment Status</label>
-                    <select class="input" id="studentStatus" name="enrolmentStatus" required>
-                        <option value="PENDING">Pending</option>
-                        <option value="ACTIVELY_STUDYING">Actively Studying</option>
-                        <option value="COMPLETED_STUDY">Completed Study</option>
-                    </select>
-                    <button class="button" type="submit">Add/Update Student</button>
-                </form>
-            </section>
-        </div>
-
-        <!-- Admin-only: Add/Update Single Faculty -->
-        <div id="adminSingleFaculty" style="display:none; margin-top:24px;">
-            <section>
-                <h2 class="section-title">Add/Update Faculty</h2>
-                <form id="singleFacultyForm" class="form">
-                    <label class="label" for="facultyName">Name</label>
-                    <input class="input" id="facultyName" name="name" type="text" required />
-                    <label class="label" for="facultyEmail">Email</label>
-                    <input class="input" id="facultyEmail" name="email" type="email" required />
-                    <label class="label" for="facultyDepartment">Department</label>
-                    <select class="input" id="facultyDepartment" name="department" required>
-                        <option value="CSE">CSE</option>
-                        <option value="ECE">ECE</option>
-                        <option value="EEE">EEE</option>
-                        <option value="CIVIL">CIVIL</option>
-                        <option value="MECHANICAL">MECHANICAL</option>
-                        <option value="AUTOMOBILE">AUTOMOBILE</option>
-                        <option value="PRODUCTION">PRODUCTION</option>
-                        <option value="IT">IT</option>
-                        <option value="AIML">AIML</option>
-                        <option value="BIOMEDICAL">BIOMEDICAL</option>
-                        <option value="TEXTILE">TEXTILE</option>
-                        <option value="FASHION">FASHION</option>
-                    </select>
-                    <label class="label" for="facultyDesignation">Designation</label>
-                    <select class="input" id="facultyDesignation" name="designation" required>
-                        <option value="PRINCIPAL">Principal</option>
-                        <option value="DEAN">Dean</option>
-                        <option value="HOD">HOD</option>
-                        <option value="PROFESSOR">Professor</option>
-                        <option value="ASSOCIATE_PROFESSOR">Associate Professor</option>
-                        <option value="ASSISTANT_PROFESSOR">Assistant Professor</option>
-                        <option value="LECTURER">Lecturer</option>
-                        <option value="LAB_ASSISTANT">Lab Assistant</option>
-                    </select>
-                    <button class="button" type="submit">Add/Update Faculty</button>
-                </form>
-            </section>
-        </div>
-
-            <div id="nonAdminContent" class="placeholder" hidden>
-                <h2 id="roleTitle">Dashboard</h2>
-                <p id="roleMessage">More features are coming soon. You’re logged in and ready.</p>
             </div>
 
-        <div id="msg" class="message" role="status" aria-live="polite" hidden></div>
-
-        <div class="links" style="justify-content: flex-start; margin-top: 10px;">
-            <a class="link" href="/login">Back to login</a>
+            <!-- Course Table -->
+            <div class="card-panel" style="padding:0; border:none; background:transparent;">
+                <h3 class="card-title" style="margin-bottom:12px;">Existing Courses</h3>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width:100px;">Code</th>
+                                <th>Course Name</th>
+                                <th style="width:80px;">Credits</th>
+                                <th style="width:140px; text-align:right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="courseAdminBody">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    </main>
-</div>
 
-<script>
-    const TOKEN_KEY = 'isms.jwt';
+        <!-- 
+             TAB: List of Courses (Faculty/Student)
+             ReadOnly Table
+        -->
+        <div id="view-courses" class="tab-content hidden">
+            <div class="card-panel">
+                <h2 class="card-title">List of Courses</h2>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width:120px;">Course Code</th>
+                                <th>Course Name</th>
+                                <th style="width:80px;">Credits</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coursePublicBody">
+                            <tr>
+                                <td colspan="3" style="text-align:center;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-    const msg = document.getElementById('msg');
-    const studentsForm = document.getElementById('studentsForm');
-    const facultiesForm = document.getElementById('facultiesForm');
-    const logoutBtn = document.getElementById('logoutBtn');
-        const subtitle = document.getElementById('subtitle');
-        const nonAdminContent = document.getElementById('nonAdminContent');
-    const roleTitle = document.getElementById('roleTitle');
-    const roleMessage = document.getElementById('roleMessage');
+    </div>
 
-    function token() {
-        return localStorage.getItem(TOKEN_KEY);
-    }
+    <script>
+        const TOKEN_KEY = 'isms.jwt';
 
-    function decodeJwtPayload(jwt) {
-        try {
-            const parts = (jwt || '').split('.');
-            if (parts.length !== 3) return null;
+        // Elements
+        const msg = document.getElementById('msg');
+        const userRoleBadge = document.getElementById('userRoleBadge');
+        const navMenu = document.getElementById('navMenu');
 
-            const base64Url = parts[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
-            const json = atob(padded);
-            return JSON.parse(json);
-        } catch (_) {
-            return null;
+        // State
+        let CURRENT_ROLE = 'STUDENT';
+
+        // Auth Helpers
+        function token() { return localStorage.getItem(TOKEN_KEY); }
+        function decodeJwt(jwt) {
+            try { return JSON.parse(atob(jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); }
+            catch { return null; }
         }
-    }
-
-    function isAdminToken(jwt) {
-        const payload = decodeJwtPayload(jwt);
-        const scope = payload && payload.scope;
-        if (!scope) return false;
-        return String(scope).split(' ').includes('ROLE_ADMIN');
-    }
-
-    function rolesFromToken(jwt) {
-        const payload = decodeJwtPayload(jwt);
-        const scope = payload && payload.scope;
-        if (!scope) return [];
-        return String(scope).split(' ').filter(Boolean);
-    }
-
-    function requireTokenOrRedirect() {
-        if (!token()) {
-            window.location.replace('/login');
+        function getRoles(jwt) {
+            const p = decodeJwt(jwt);
+            return (p && p.scope) ? p.scope.split(' ').filter(Boolean) : [];
         }
-    }
+        function requireAuth() { if (!token()) window.location.replace('/login'); }
 
-    function hideCsvUi() {
-        const row = document.querySelector('.row');
-        if (row) row.style.display = 'none';
-    }
-
-        function showNonAdminContent() {
-            if (nonAdminContent) nonAdminContent.hidden = false;
+        // UI Helpers
+        function showMessage(text, type) {
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            msg.hidden = false;
         }
 
-    function showMessage(text, kind) {
-        msg.textContent = text;
-        msg.className = `message ${kind}`;
-        msg.hidden = false;
-    }
+        // --- View Logic ---
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
 
-    async function uploadCsv(endpoint, fileInputId) {
-        msg.hidden = true;
+            // Show target
+            const target = document.getElementById(`view-${tabId}`);
+            if (target) target.classList.remove('hidden');
 
-        const jwt = token();
-        if (!jwt) {
-            requireTokenOrRedirect();
-            return;
+            // Update Nav Active State
+            document.querySelectorAll('.nav-item').forEach(el => {
+                if (el.dataset.tab === tabId) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+
+            // Special Loaders
+            if (tabId === 'course-admin' || tabId === 'courses') loadCourses();
         }
 
-        const fileInput = document.getElementById(fileInputId);
-        const file = fileInput.files && fileInput.files[0];
-        if (!file) {
-            showMessage('Please choose a CSV file.', 'error');
-            return;
+        function renderNav(role) {
+            let links = [];
+
+            // "make a nav bar for each" + "data import" + "course administration"
+            if (role === 'ADMIN') {
+                links = [
+                    { label: 'Data Import', id: 'import' },
+                    { label: 'Course Administration', id: 'course-admin' }
+                ];
+            } else {
+                // Faculty or Student -> "List of courses"
+                links = [
+                    { label: 'List of Courses', id: 'courses' }
+                ];
+            }
+
+            navMenu.innerHTML = links.map(l =>
+                `<div class="nav-item" data-tab="${l.id}" onclick="switchTab('${l.id}')">${l.label}</div>`
+            ).join('');
+
+            // Activate first tab
+            if (links.length > 0) switchTab(links[0].id);
         }
 
-        const body = new FormData();
-        body.append('file', file);
+        // --- Init ---
+        function init() {
+            requireAuth();
+            const jwt = token();
+            const roles = getRoles(jwt);
 
-        const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${jwt}`
-            },
-            body
+            if (roles.includes('ROLE_ADMIN')) {
+                CURRENT_ROLE = 'ADMIN';
+                userRoleBadge.textContent = 'Administrator';
+                userRoleBadge.style.color = '#fcb_00';
+                userRoleBadge.style.borderColor = 'rgba(255, 200, 0, 0.4)';
+            } else if (roles.includes('ROLE_FACULTY')) {
+                CURRENT_ROLE = 'FACULTY';
+                userRoleBadge.textContent = 'Faculty';
+                userRoleBadge.style.color = '#6ee7b7';
+            } else {
+                CURRENT_ROLE = 'STUDENT';
+                userRoleBadge.textContent = 'Student';
+            }
+
+            renderNav(CURRENT_ROLE);
+        }
+
+        // --- API Calls ---
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            try {
+                const opts = {
+                    method,
+                    headers: {
+                        'Authorization': `Bearer ${token()}`,
+                        ...(body ? { 'Content-Type': 'application/json' } : {})
+                    }
+                };
+                if (body instanceof FormData) {
+                    delete opts.headers['Content-Type'];
+                    opts.body = body;
+                } else if (body) {
+                    opts.body = JSON.stringify(body);
+                }
+
+                const res = await fetch(endpoint, opts);
+                if (res.status === 401) {
+                    localStorage.removeItem(TOKEN_KEY);
+                    window.location.replace('/login');
+                    return null;
+                }
+                const text = await res.text();
+                return { ok: res.ok, text };
+            } catch (e) {
+                return { ok: false, text: 'Network Error' };
+            }
+        }
+
+        // --- Features ---
+        async function loadCourses() {
+            // Determine active table based on role
+            const isAdmin = (CURRENT_ROLE === 'ADMIN');
+            const tbody = document.getElementById(isAdmin ? 'courseAdminBody' : 'coursePublicBody');
+
+            if (!tbody) return;
+
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>`;
+
+            const res = await apiCall('/get/courses');
+            if (!res || !res.ok) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--danger);">Failed to load</td></tr>`;
+                return;
+            }
+
+            const courses = JSON.parse(res.text);
+
+            if (courses.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No courses found.</td></tr>`;
+                return;
+            }
+
+            if (isAdmin) {
+                tbody.innerHTML = courses.map(c => `
+                    <tr>
+                        <td><span style="font-family:monospace; background:#222; padding:2px 6px; border-radius:4px;">${c.courseCode}</span></td>
+                        <td style="font-weight:500;">${c.courseName}</td>
+                        <td>${c.credits}</td>
+                        <td style="text-align:right;">
+                            <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" 
+                                onclick="updateCourse('${c.courseCode}', '${c.courseName}')">Edit</button>
+                            <button class="btn btn-danger" style="padding:4px 8px; font-size:11px; margin-left:6px;" 
+                                onclick="removeCourse('${c.courseCode}')">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = courses.map(c => `
+                    <tr>
+                        <td><span style="font-family:monospace; background:#222; padding:2px 6px; border-radius:4px;">${c.courseCode}</span></td>
+                        <td style="font-weight:500;">${c.courseName}</td>
+                        <td>${c.credits}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // Forms Config
+        const forms = {
+            studentsForm: { url: '/students/csv', type: 'file', fileId: 'studentsFile' },
+            facultiesForm: { url: '/faculties/csv', type: 'file', fileId: 'facultiesFile' },
+            singleStudentForm: { url: '/student/csv', type: 'json', fields: ['studentName', 'studentDob', 'studentEmail', 'studentStatus'], map: { studentName: 'name', studentDob: 'dateOfBirth', studentEmail: 'email', studentStatus: 'enrolmentStatus' } },
+            singleFacultyForm: { url: '/faculty/csv', type: 'json', fields: ['facultyName', 'facultyEmail', 'facultyDepartment', 'facultyDesignation'], map: { facultyName: 'name', facultyEmail: 'email', facultyDepartment: 'department', facultyDesignation: 'designation' } },
+            addCourseForm: { url: '/post/course', type: 'json', fields: ['courseName', 'courseCode', 'courseCredits'], map: { courseCredits: (v) => parseInt(v) }, success: loadCourses }
+        };
+
+        // Attach Listeners
+        Object.entries(forms).forEach(([id, config]) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            el.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                msg.hidden = true;
+                let body;
+
+                if (config.type === 'file') {
+                    const input = document.getElementById(config.fileId);
+                    if (!input.files[0]) return showMessage('Select file first', 'error');
+                    body = new FormData();
+                    body.append('file', input.files[0]);
+                } else {
+                    body = {};
+                    config.fields.forEach(f => {
+                        const val = document.getElementById(f).value;
+                        let finalVal = val;
+                        let finalKey;
+
+                        for (let k in config.map) {
+                            if (k === f) {
+                                if (typeof config.map[k] === 'function') finalVal = config.map[k](val);
+                                else finalKey = config.map[k];
+                            }
+                        }
+                        if (!finalKey) finalKey = config.map[f] || f;
+
+                        body[finalKey] = finalVal;
+                    });
+                }
+
+                const res = await apiCall(config.url, 'POST', body);
+                showMessage(res.text, res.ok ? 'success' : 'error');
+                if (res.ok) {
+                    el.reset();
+                    if (config.success) config.success();
+                }
+            });
         });
 
-        const text = await res.text();
+        // Global Actions
+        window.updateCourse = async (code, oldName) => {
+            const newName = prompt('New Course Name:', oldName);
+            if (newName && newName !== oldName) {
+                const res = await apiCall(`/update/course?courseName=${encodeURIComponent(newName)}&courseCode=${encodeURIComponent(code)}`, 'PUT');
+                showMessage(res.text, res.ok ? 'success' : 'error');
+                if (res.ok) loadCourses();
+            }
+        }
 
-        if (res.status === 401) {
+        window.removeCourse = async (code) => {
+            if (confirm('Delete course ' + code + '?')) {
+                const res = await apiCall(`/delete/course?courseCode=${encodeURIComponent(code)}`, 'DELETE');
+                showMessage(res.text, res.ok ? 'success' : 'error');
+                if (res.ok) loadCourses();
+            }
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
             localStorage.removeItem(TOKEN_KEY);
-            showMessage('Session expired. Please log in again.', 'error');
-            setTimeout(() => window.location.replace('/login'), 600);
-            return;
-        }
-
-        showMessage(text || 'Request completed.', res.ok ? 'success' : 'error');
-    }
-
-    studentsForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        try {
-            await uploadCsv('/students/csv', 'studentsFile');
-        } catch (_) {
-            showMessage('Upload failed. Please try again.', 'error');
-        }
-    });
-
-    facultiesForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        try {
-            await uploadCsv('/faculties/csv', 'facultiesFile');
-        } catch (_) {
-            showMessage('Upload failed. Please try again.', 'error');
-        }
-    });
-
-    logoutBtn.addEventListener('click', () => {
-        localStorage.removeItem(TOKEN_KEY);
-        window.location.replace('/login');
-    });
-
-    requireTokenOrRedirect();
-    // Only admins should see the CSV upload UI and single add/update forms.
-    const jwt = token();
-    const roles = rolesFromToken(jwt);
-    const isAdmin = roles.includes('ROLE_ADMIN');
-    if (!isAdmin) {
-        hideCsvUi();
-        showNonAdminContent();
-        if (roles.includes('ROLE_FACULTY')) {
-            if (subtitle) subtitle.textContent = 'Welcome, Faculty.';
-            if (roleTitle) roleTitle.textContent = 'Faculty Dashboard';
-            if (roleMessage) roleMessage.textContent = 'More features are coming soon. You’re logged in and ready.';
-        } else {
-            // Default to student experience.
-            if (subtitle) subtitle.textContent = 'Welcome, Student.';
-            if (roleTitle) roleTitle.textContent = 'Student Dashboard';
-            if (roleMessage) roleMessage.textContent = 'More features are coming soon. You’re logged in and ready.';
-        }
-        showMessage('Logged in successfully.', 'success');
-    } else {
-        if (subtitle) subtitle.textContent = 'Admin tools';
-        // Show admin-only forms
-        document.getElementById('adminSingleStudent').style.display = '';
-        document.getElementById('adminSingleFaculty').style.display = '';
-    }
-
-    // Admin-only: handle single student add/update
-    const singleStudentForm = document.getElementById('singleStudentForm');
-    if (singleStudentForm) {
-        singleStudentForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            msg.hidden = true;
-            const jwt = token();
-            if (!jwt) { requireTokenOrRedirect(); return; }
-            const data = {
-                name: document.getElementById('studentName').value,
-                dateOfBirth: document.getElementById('studentDob').value,
-                email: document.getElementById('studentEmail').value,
-                enrolmentStatus: document.getElementById('studentStatus').value
-            };
-            const res = await fetch('/student/csv', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${jwt}`
-                },
-                body: JSON.stringify(data)
-            });
-            const text = await res.text();
-            showMessage(text || 'Request completed.', res.ok ? 'success' : 'error');
+            window.location.replace('/login');
         });
-    }
 
-    // Admin-only: handle single faculty add/update
-    const singleFacultyForm = document.getElementById('singleFacultyForm');
-    if (singleFacultyForm) {
-        singleFacultyForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            msg.hidden = true;
-            const jwt = token();
-            if (!jwt) { requireTokenOrRedirect(); return; }
-            const data = {
-                name: document.getElementById('facultyName').value,
-                email: document.getElementById('facultyEmail').value,
-                department: document.getElementById('facultyDepartment').value,
-                designation: document.getElementById('facultyDesignation').value
-            };
-            const res = await fetch('/faculty/csv', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${jwt}`
-                },
-                body: JSON.stringify(data)
-            });
-            const text = await res.text();
-            showMessage(text || 'Request completed.', res.ok ? 'success' : 'error');
-        });
-    }
-</script>
+        init();
+    </script>
 </body>
+
 </html>
