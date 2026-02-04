@@ -25,7 +25,7 @@ public class CourseService {
 
     @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
     public String createCourse(CourseDTO courseDTO) {
-        CourseEntity courseEntity = new CourseEntity(courseDTO.courseName(), courseDTO.courseCode(), courseDTO.credits());
+        CourseEntity courseEntity = new CourseEntity(courseDTO.courseName(), courseDTO.courseCode(), courseDTO.credits(), courseDTO.semester());
         if(courseRepository.existsByCourseCode(courseDTO.courseCode())) return "Course already exists.";
 
         courseRepository.save(courseEntity);

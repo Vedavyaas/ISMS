@@ -47,7 +47,7 @@ public class CSVService {
 
         List<StudentEntity> entities = dtos.stream().map(dto -> {
             UserEntity user = new UserEntity(dto.name(), passwordEncoder.encode(dto.dateOfBirth().toString()), Role.STUDENT);
-            return new StudentEntity(user, dto.name(), dto.dateOfBirth(), dto.email(), dto.enrolmentStatus());
+            return new StudentEntity(user, dto.name(), dto.dateOfBirth(), dto.email(), dto.enrolmentStatus(), dto.currentSemester(), dto.department());
         }).toList();
 
         studentRepository.saveAllAndFlush(entities);
@@ -124,7 +124,7 @@ public class CSVService {
 
         UserEntity userEntity = new UserEntity(studentDTO.name(), passwordEncoder.encode(studentDTO.dateOfBirth().toString()), Role.STUDENT);
 
-        StudentEntity studentEntity = new StudentEntity(userEntity, studentDTO.name(), studentDTO.dateOfBirth(), studentDTO.email(), studentDTO.enrolmentStatus());
+        StudentEntity studentEntity = new StudentEntity(userEntity, studentDTO.name(), studentDTO.dateOfBirth(), studentDTO.email(), studentDTO.enrolmentStatus(), studentDTO.currentSemester(), studentDTO.department());
         studentRepository.save(studentEntity);
 
         return "Successfully updated student data";

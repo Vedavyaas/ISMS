@@ -13,13 +13,15 @@ public class CourseEntity {
     private String courseName;
     private String courseCode;
     private int credits;
+    private int semester;
 
     public CourseEntity() {}
 
-    public CourseEntity(String courseName, String courseCode, int credits) {
+    public CourseEntity(String courseName, String courseCode, int credits, int semester) {
         this.courseName = courseName;
         this.courseCode = courseCode;
         this.credits = credits;
+        this.semester = semester;
     }
 
     public Long getId() {
@@ -52,5 +54,13 @@ public class CourseEntity {
 
     public void setCredits(int credits) {
         this.credits = credits;
+    }
+
+    public int getSemester() {
+        return semester;
+    }
+
+    public void setSemester(int semester) {
+        this.semester = semester;
     }
 }

@@ -1,8 +1,9 @@
 package com.adl.isms.dto;
 
+import com.adl.isms.assests.Department;
 import com.adl.isms.assests.EnrolmentStatus;
 
 import java.time.LocalDate;
 
-public record StudentDTO(String name, LocalDate dateOfBirth, String email, EnrolmentStatus enrolmentStatus) {
+public record StudentDTO(String name, LocalDate dateOfBirth, String email, EnrolmentStatus enrolmentStatus, Integer currentSemester, Department department) {
 }

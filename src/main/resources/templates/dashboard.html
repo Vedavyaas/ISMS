@@ -274,18 +274,22 @@
                     { label: 'Course Administration', id: 'course-admin' }
                 ];
             } else {
-                // Faculty or Student -> "List of courses"
+                // Faculty or Student -> "List of courses" + "My Courses"
                 links = [
-                    { label: 'List of Courses', id: 'courses' }
+                    { label: 'All Courses', id: 'courses' },
+                    { label: role === 'FACULTY' ? 'My Assigned Courses' : 'My Enrolled Courses', url: '/my-courses' }
                 ];
             }
 
-            navMenu.innerHTML = links.map(l =>
-                `<div class="nav-item" data-tab="${l.id}" onclick="switchTab('${l.id}')">${l.label}</div>`
-            ).join('');
+            navMenu.innerHTML = links.map(l => {
+                if (l.url) {
+                    return `<a href="${l.url}" class="nav-item" style="text-decoration:none;">${l.label}</a>`;
+                }
+                return `<div class="nav-item" data-tab="${l.id}" onclick="switchTab('${l.id}')">${l.label}</div>`;
+            }).join('');
 
-            // Activate first tab
-            if (links.length > 0) switchTab(links[0].id);
+            // Activate first tab if it's not a URL
+            if (links.length > 0 && !links[0].url) switchTab(links[0].id);
         }
 
         // --- Init ---

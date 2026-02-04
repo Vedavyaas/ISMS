@@ -1,5 +1,6 @@
 package com.adl.isms.repository;
 
+import com.adl.isms.assests.Department;
 import com.adl.isms.assests.EnrolmentStatus;
 import jakarta.persistence.*;
 
@@ -19,16 +20,23 @@ public class StudentEntity {
     private String email;
     @Enumerated(EnumType.STRING)
     private EnrolmentStatus enrolmentStatus;
+    
+    @Enumerated(EnumType.STRING)
+    private Department department;
+
+    private Integer currentSemester;
 
     public StudentEntity() {
     }
 
-    public StudentEntity(UserEntity userId, String name, LocalDate dateOfBirth, String email, EnrolmentStatus enrolmentStatus) {
+    public StudentEntity(UserEntity userId, String name, LocalDate dateOfBirth, String email, EnrolmentStatus enrolmentStatus, Integer currentSemester, Department department) {
         this.userId = userId;
         this.name = name;
         this.dateOfBirth = dateOfBirth;
         this.email = email;
         this.enrolmentStatus = enrolmentStatus;
+        this.currentSemester = currentSemester;
+        this.department = department;
     }
 
     public Long getId() {
@@ -77,5 +85,21 @@ public class StudentEntity {
 
     public void setEnrolmentStatus(EnrolmentStatus enrolmentStatus) {
         this.enrolmentStatus = enrolmentStatus;
+    }
+
+    public Integer getCurrentSemester() {
+        return currentSemester;
+    }
+
+    public void setCurrentSemester(Integer currentSemester) {
+        this.currentSemester = currentSemester;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
     }
 }

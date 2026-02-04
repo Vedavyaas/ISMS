@@ -1,4 +1,4 @@
-name,dateOfBirth,email,enrolmentStatus
-Asha Kumar,2003-07-14,asha.kumar@example.com,PENDING
-Ravi Patel,2002-11-02,ravi.patel@example.com,ACTIVELY_STUDYING
-Meera Singh,2001-03-25,meera.singh@example.com,COMPLETED_STUDY
+name,dateOfBirth,email,enrolmentStatus,currentSemester,department
+Asha Kumar,2003-07-14,asha.kumar@example.com,PENDING,1,CSE
+Ravi Patel,2002-11-02,ravi.patel@example.com,ACTIVELY_STUDYING,3,ECE
+Meera Singh,2001-03-25,meera.singh@example.com,COMPLETED_STUDY,8,IT

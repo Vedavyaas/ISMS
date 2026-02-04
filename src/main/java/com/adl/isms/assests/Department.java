@@ -12,5 +12,6 @@ public enum Department {
     AIML,
     BIOMEDICAL,
     TEXTILE,
-    FASHION
+    FASHION,
+    MATHS
 }

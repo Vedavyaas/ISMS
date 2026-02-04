@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My Courses | ISMS</title>
+    <link rel="stylesheet" href="/css/auth.css" />
+    <style>
+        .container-wide {
+            max-width: 1000px;
+            margin: 100px auto 40px auto;
+            padding: 0 20px;
+        }
+
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .role-badge {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span style="color:var(--text-muted); margin-right:6px;">//</span> ISMS
+        </div>
+        <div class="nav-user">
+            <a href="/dashboard" class="btn btn-secondary"
+                style="margin-right: 12px; text-decoration: none; color: inherit;">Back to Dashboard</a>
+            <button id="logoutBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 11px;">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container-wide">
+        <div class="header-flex">
+            <div>
+                <h1 id="pageTitle" class="card-title" style="font-size: 24px; margin-bottom: 4px;">My Courses</h1>
+                <span id="userRoleBadge" class="role-badge">Loading...</span>
+            </div>
+            <button class="btn" onclick="loadData()">Refresh</button>
+        </div>
+
+        <div class="card-panel">
+            <div class="table-container">
+                <table class="table">
+                    <thead id="tableHead">
+                        <!-- Injected by JS -->
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="4" style="text-align:center;">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TOKEN_KEY = 'isms.jwt';
+        const userRoleBadge = document.getElementById('userRoleBadge');
+        const tableHead = document.getElementById('tableHead');
+        const tableBody = document.getElementById('tableBody');
+        const pageTitle = document.getElementById('pageTitle');
+
+        // Auth & JWT Utils
+        function token() { return localStorage.getItem(TOKEN_KEY); }
+        function decodeJwt(jwt) {
+            try { return JSON.parse(atob(jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); }
+            catch { return null; }
+        }
+        function getRoles(jwt) {
+            const p = decodeJwt(jwt);
+            return (p && p.scope) ? p.scope.split(' ').filter(Boolean) : [];
+        }
+        function requireAuth() { if (!token()) window.location.replace('/login'); }
+
+        let CURRENT_ROLE = null;
+
+        async function init() {
+            requireAuth();
+            const jwt = token();
+            const roles = getRoles(jwt);
+
+            if (roles.includes('ROLE_FACULTY')) {
+                CURRENT_ROLE = 'FACULTY';
+                userRoleBadge.textContent = 'Faculty Access';
+                userRoleBadge.style.color = '#6ee7b7';
+                userRoleBadge.style.background = 'rgba(110, 231, 183, 0.1)';
+                pageTitle.textContent = 'Assigned Courses';
+            } else if (roles.includes('ROLE_STUDENT')) {
+                CURRENT_ROLE = 'STUDENT';
+                userRoleBadge.textContent = 'Student Access';
+                pageTitle.textContent = 'Enrolled Courses';
+            } else {
+                // Admin or unknown
+                tableBody.innerHTML = `<tr><td style="text-align:center; padding: 20px;">Admins do not have personal courses. <a href="/dashboard">Go to Dashboard</a></td></tr>`;
+                return;
+            }
+
+            renderHeader();
+            loadData();
+        }
+
+        function renderHeader() {
+            if (CURRENT_ROLE === 'STUDENT') {
+                tableHead.innerHTML = `
+                    <tr>
+                        <th style="width:100px;">Code</th>
+                        <th>Course Name</th>
+                        <th>Faculty</th>
+                        <th style="width:100px;">Semester</th>
+                    </tr>
+                `;
+            } else if (CURRENT_ROLE === 'FACULTY') {
+                tableHead.innerHTML = `
+                    <tr>
+                        <th style="width:100px;">Code</th>
+                        <th>Course Name</th>
+                        <th style="width:100px;">Semester</th>
+                        <th style="width:120px; text-align:right;">Student Count</th>
+                    </tr>
+                `;
+            }
+        }
+
+        async function loadData() {
+            if (!CURRENT_ROLE) return;
+
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading data...</td></tr>`;
+
+            const endpoint = (CURRENT_ROLE === 'STUDENT') ? '/enrolment/student' : '/enrolment/faculty';
+
+            try {
+                const res = await fetch(endpoint, {
+                    headers: { 'Authorization': `Bearer ${token()}` }
+                });
+
+                if (res.status === 401) {
+                    localStorage.removeItem(TOKEN_KEY);
+                    window.location.replace('/login');
+                    return;
+                }
+
+                if (!res.ok) throw new Error('Failed to fetch');
+
+                const data = await res.json();
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px;">No courses found.</td></tr>`;
+                    return;
+                }
+
+                if (CURRENT_ROLE === 'STUDENT') {
+                    tableBody.innerHTML = data.map(d => `
+                        <tr>
+                            <td><span style="font-family:monospace; background:#222; padding:2px 6px; border-radius:4px;">${d.courseCode}</span></td>
+                            <td style="font-weight:500;">${d.courseName}</td>
+                            <td>${d.facultyName}</td>
+                            <td><span style="background:#333; padding:2px 8px; border-radius:12px; font-size:12px;">${d.semester}</span></td>
+                        </tr>
+                    `).join('');
+                } else if (CURRENT_ROLE === 'FACULTY') {
+                    tableBody.innerHTML = data.map(d => `
+                        <tr>
+                            <td><span style="font-family:monospace; background:#222; padding:2px 6px; border-radius:4px;">${d.courseCode}</span></td>
+                            <td style="font-weight:500;">${d.courseName}</td>
+                            <td><span style="background:#333; padding:2px 8px; border-radius:12px; font-size:12px;">${d.semester}</span></td>
+                            <td style="text-align:right; font-weight:bold;">${d.studentCount}</td>
+                        </tr>
+                    `).join('');
+                }
+
+            } catch (err) {
+                console.error(err);
+                tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--danger);">Error loading data. Try refreshing.</td></tr>`;
+            }
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem(TOKEN_KEY);
+            window.location.replace('/login');
+        });
+
+        init();
+    </script>
+
+</body>
+
+</html>
