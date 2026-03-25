@@ -46,7 +46,7 @@ public class CSVService {
         if(csvCheck(dtos, StudentDTO::email)) return "Duplicate data found";
 
         List<StudentEntity> entities = dtos.stream().map(dto -> {
-            UserEntity user = new UserEntity(dto.name(), passwordEncoder.encode(dto.dateOfBirth().toString()), Role.STUDENT);
+            UserEntity user = new UserEntity(dto.name(), passwordEncoder.encode("password"), Role.STUDENT);
             return new StudentEntity(user, dto.name(), dto.dateOfBirth(), dto.email(), dto.enrolmentStatus(), dto.currentSemester(), dto.department());
         }).toList();
 
@@ -67,7 +67,7 @@ public class CSVService {
         if(csvCheck(dtos, FacultyDTO::email)) return "Duplicate data found";
 
         List<FacultyEntity> entities = dtos.stream().map(dto -> {
-            UserEntity user = new UserEntity(dto.name(), passwordEncoder.encode(UUID.randomUUID().toString()), Role.FACULTY);
+            UserEntity user = new UserEntity(dto.name(), passwordEncoder.encode("password"), Role.FACULTY);
             return new FacultyEntity(user, dto.name(), dto.email(), dto.department(), dto.designation());
         }).toList();
 
@@ -109,7 +109,7 @@ public class CSVService {
     public String updateFaculty(FacultyDTO facultyDTO) {
         if(facultyRepository.existsByEmail(facultyDTO.email())) return "Already exists";
 
-        UserEntity userEntity = new UserEntity(facultyDTO.name(), passwordEncoder.encode(UUID.randomUUID().toString()), Role.FACULTY);
+        UserEntity userEntity = new UserEntity(facultyDTO.name(), passwordEncoder.encode("password"), Role.FACULTY);
         FacultyEntity facultyEntity = new FacultyEntity(userEntity, facultyDTO.name(), facultyDTO.email(), facultyDTO.department(), facultyDTO.designation());
 
         facultyRepository.save(facultyEntity);
@@ -122,7 +122,7 @@ public class CSVService {
     public String updateStudent(StudentDTO studentDTO) {
         if(studentRepository.existsByEmail(studentDTO.email())) return "Already exists";
 
-        UserEntity userEntity = new UserEntity(studentDTO.name(), passwordEncoder.encode(studentDTO.dateOfBirth().toString()), Role.STUDENT);
+        UserEntity userEntity = new UserEntity(studentDTO.name(), passwordEncoder.encode("password"), Role.STUDENT);
 
         StudentEntity studentEntity = new StudentEntity(userEntity, studentDTO.name(), studentDTO.dateOfBirth(), studentDTO.email(), studentDTO.enrolmentStatus(), studentDTO.currentSemester(), studentDTO.department());
         studentRepository.save(studentEntity);

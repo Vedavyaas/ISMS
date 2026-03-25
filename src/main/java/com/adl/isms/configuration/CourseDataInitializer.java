@@ -6,6 +6,7 @@ import com.adl.isms.repository.CourseRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -19,9 +20,11 @@ public class CourseDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (courseRepository.count() > 0) return;
+        if (courseRepository.count() > 200) return; // Prevent continuous addition
+        
+        courseRepository.deleteAll(); // Clear old data
 
-        List<CourseEntity> courseEntityList = List.of(
+        List<CourseEntity> courseEntityList = new ArrayList<>(List.of(
                 // Semester 1
                 new CourseEntity("Calculus", "23M101", 4, 1),
                 new CourseEntity("Introduction to Programming", "23CS101", 4, 1),
@@ -89,7 +92,22 @@ public class CourseDataInitializer implements CommandLineRunner {
                 new CourseEntity("Internet of Things", "23EC401", 3, 4),
                 new CourseEntity("Cloud Computing", "23CS402", 3, 4),
                 new CourseEntity("Blockchain Technology", "23CS403", 3, 4)
-        );
+        ));
+
+        // Generate at least 5 courses for every department per semester
+        String[] prefixes = {"CS", "EC", "EE", "CE", "ME", "IT", "AI", "BT", "M", "AU", "PR", "TE", "FA"};
+        String[] subjs = {"Core I", "Core II", "Elective I", "Elective II", "Lab"};
+
+        for (int sem = 1; sem <= 8; sem++) {
+            for (String pfx : prefixes) {
+                for (int i = 0; i < 5; i++) {
+                    String code = "23" + pfx + sem + "0" + (i + 5); 
+                    String name = pfx + " Sem " + sem + " " + subjs[i];
+                    CourseEntity newCourse = new CourseEntity(name, code, 3, sem);
+                    courseEntityList.add(newCourse);
+                }
+            }
+        }
 
         courseRepository.saveAllAndFlush(courseEntityList);
         System.out.println("Initialized " + courseEntityList.size() + " Courses");
