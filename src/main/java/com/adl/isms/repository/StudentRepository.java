@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface StudentRepository extends JpaRepository<StudentEntity, Long> {
     boolean existsByEmail(String email);
     Page<StudentEntity> findAllByEnrolmentStatus(EnrolmentStatus enrolmentStatus, Pageable pageable);
+
+    Page<StudentEntity> findByFinanceUpdated(boolean financeUpdated, Pageable pageable);
 }

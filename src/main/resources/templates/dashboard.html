@@ -213,6 +213,56 @@
             </div>
         </div>
 
+        <!--
+             TAB: Finance Management (Admin Only)
+             View student fee status & record payments
+        -->
+        <div id="view-finance" class="tab-content hidden">
+            <!-- Summary Cards Row -->
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px;">
+                <div class="card-panel" style="text-align:center;">
+                    <div id="fin-total-count" style="font-size:2rem; font-weight:700; color:var(--accent);">—</div>
+                    <div class="label" style="margin-top:4px;">Total Students</div>
+                </div>
+                <div class="card-panel" style="text-align:center;">
+                    <div id="fin-paid-count" style="font-size:2rem; font-weight:700; color:#6ee7b7;">—</div>
+                    <div class="label" style="margin-top:4px;">Fully Paid</div>
+                </div>
+                <div class="card-panel" style="text-align:center;">
+                    <div id="fin-pending-count" style="font-size:2rem; font-weight:700; color:#f59e0b;">—</div>
+                    <div class="label" style="margin-top:4px;">Pending Payment</div>
+                </div>
+            </div>
+
+            <!-- Finance Table -->
+            <div class="card-panel" style="padding:0; border:none; background:transparent;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                    <h3 class="card-title" style="margin:0;">Student Fee Records</h3>
+                    <input class="input" id="finSearch" type="text" placeholder="Search by name or status…"
+                        style="width:240px; padding:6px 12px; font-size:12px;"
+                        oninput="filterFinanceTable(this.value)" />
+                </div>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">#</th>
+                                <th>Student Name</th>
+                                <th style="width:120px;">Amount Due (₹)</th>
+                                <th style="width:120px;">Amount Paid (₹)</th>
+                                <th style="width:110px;">Balance (₹)</th>
+                                <th style="width:110px;">Status</th>
+                                <th style="width:160px; text-align:right;">Add Payment</th>
+                            </tr>
+                        </thead>
+                        <tbody id="financeBody">
+                            <tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -262,6 +312,7 @@
 
             // Special Loaders
             if (tabId === 'course-admin' || tabId === 'courses') loadCourses();
+            if (tabId === 'finance') loadFinance();
         }
 
         function renderNav(role) {
@@ -271,7 +322,8 @@
             if (role === 'ADMIN') {
                 links = [
                     { label: 'Data Import', id: 'import' },
-                    { label: 'Course Administration', id: 'course-admin' }
+                    { label: 'Course Administration', id: 'course-admin' },
+                    { label: 'Finance', id: 'finance' }
                 ];
             } else {
                 // Faculty or Student -> "List of courses" + "My Courses"
@@ -344,6 +396,87 @@
                 return { ok: false, text: 'Network Error' };
             }
         }
+
+        // --- Finance ---
+        let _allFinanceRows = [];
+
+        async function loadFinance() {
+            const tbody = document.getElementById('financeBody');
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Loading…</td></tr>`;
+
+            const res = await apiCall('/get/finance/status');
+            if (!res || !res.ok) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--danger);">Failed to load finance data.</td></tr>`;
+                return;
+            }
+
+            const records = JSON.parse(res.text);
+            _allFinanceRows = records;
+
+            // Summary
+            const paid    = records.filter(r => r.paymentStatus === 'PAID').length;
+            const pending = records.length - paid;
+            document.getElementById('fin-total-count').textContent   = records.length;
+            document.getElementById('fin-paid-count').textContent    = paid;
+            document.getElementById('fin-pending-count').textContent = pending;
+
+            renderFinanceRows(records);
+        }
+
+        function renderFinanceRows(records) {
+            const tbody = document.getElementById('financeBody');
+            if (records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No finance records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = records.map((r, i) => {
+                const isPaid    = r.paymentStatus === 'PAID';
+                const balance   = (r.amountDue - r.amountPaid).toFixed(2);
+                const statusBadge = isPaid
+                    ? `<span style="background:rgba(110,231,183,.15); color:#6ee7b7; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600;">PAID</span>`
+                    : `<span style="background:rgba(245,158,11,.15); color:#f59e0b; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600;">PENDING</span>`;
+
+                return `
+                <tr data-id="${r.id}" data-name="${(r.student?.name || '').toLowerCase()}" data-status="${r.paymentStatus.toLowerCase()}">
+                    <td style="color:var(--text-muted); font-size:12px;">${i + 1}</td>
+                    <td style="font-weight:500;">${r.student?.name ?? '—'}</td>
+                    <td>₹${r.amountDue.toLocaleString()}</td>
+                    <td style="color:#6ee7b7;">₹${r.amountPaid.toLocaleString()}</td>
+                    <td style="color:${isPaid ? '#6ee7b7' : '#f59e0b'};">₹${balance}</td>
+                    <td>${statusBadge}</td>
+                    <td style="text-align:right;">
+                        ${!isPaid ? `
+                        <div style="display:flex; gap:6px; justify-content:flex-end; align-items:center;">
+                            <input class="input" id="pay-amt-${r.id}" type="number" min="1" step="0.01"
+                                placeholder="₹ amount"
+                                style="width:90px; padding:4px 8px; font-size:11px;" />
+                            <button class="btn" style="padding:4px 10px; font-size:11px;"
+                                onclick="recordPayment(${r.id})">Pay</button>
+                        </div>` : `<span style="color:var(--text-muted); font-size:11px;">—</span>`}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        window.recordPayment = async (id) => {
+            const input = document.getElementById(`pay-amt-${id}`);
+            const amount = parseFloat(input?.value);
+            if (!amount || amount <= 0) return showMessage('Enter a valid amount.', 'error');
+
+            const res = await apiCall(`/put/finance/amountPaid?id=${id}&amountPaid=${amount}`, 'POST');
+            showMessage(res.text, res.ok ? 'success' : 'error');
+            if (res.ok) loadFinance();
+        };
+
+        window.filterFinanceTable = (query) => {
+            const q = query.toLowerCase().trim();
+            if (!q) { renderFinanceRows(_allFinanceRows); return; }
+            renderFinanceRows(_allFinanceRows.filter(r =>
+                (r.student?.name || '').toLowerCase().includes(q) ||
+                r.paymentStatus.toLowerCase().includes(q)
+            ));
+        };
 
         // --- Features ---
         async function loadCourses() {

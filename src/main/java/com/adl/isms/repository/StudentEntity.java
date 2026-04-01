@@ -26,6 +26,8 @@ public class StudentEntity {
 
     private Integer currentSemester;
 
+    private boolean financeUpdated;
+
     public StudentEntity() {
     }
 
@@ -37,6 +39,7 @@ public class StudentEntity {
         this.enrolmentStatus = enrolmentStatus;
         this.currentSemester = currentSemester;
         this.department = department;
+        this.financeUpdated = false;
     }
 
     public Long getId() {
@@ -102,4 +105,13 @@ public class StudentEntity {
     public void setDepartment(Department department) {
         this.department = department;
     }
+
+    public boolean isFinanceUpdated() {
+        return financeUpdated;
+    }
+
+    public void setFinanceUpdated(boolean financeUpdated) {
+        this.financeUpdated = financeUpdated;
+    }
 }
+
