@@ -136,6 +136,47 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Existing Users Tables -->
+            <div class="grid-2" style="margin-top:20px;">
+                <div class="card-panel" style="padding:0; border:none; background:transparent;">
+                    <h3 class="card-title" style="margin-bottom:12px;">All Students</h3>
+                    <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Dept</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsAdminBody">
+                                <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card-panel" style="padding:0; border:none; background:transparent;">
+                    <h3 class="card-title" style="margin-bottom:12px;">All Faculties</h3>
+                    <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Dept</th>
+                                    <th>Role</th>
+                                </tr>
+                            </thead>
+                            <tbody id="facultiesAdminBody">
+                                <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- 
@@ -213,7 +254,7 @@
             </div>
         </div>
 
-        <!--
+            <!--
              TAB: Finance Management (Admin Only)
              View student fee status & record payments
         -->
@@ -257,6 +298,87 @@
                         </thead>
                         <tbody id="financeBody">
                             <tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 
+             TAB: Attendance Administration (Admin Only)
+        -->
+        <div id="view-attendance-admin" class="tab-content hidden">
+            <div class="grid-2">
+                <div class="card-panel">
+                    <h3 class="card-title">Update Single Attendance</h3>
+                    <form id="singleAttendanceForm">
+                        <div class="grid-2" style="margin-bottom:12px;">
+                            <div>
+                                <label class="label">Student ID</label>
+                                <input class="input" id="attStudentId" type="number" required />
+                            </div>
+                            <div>
+                                <label class="label">Course ID</label>
+                                <input class="input" id="attCourseId" type="number" required />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="label">Attendance %</label>
+                            <input class="input" id="attPercentage" type="number" step="0.01" min="0" max="100" required />
+                        </div>
+                        <button class="btn" type="submit">Update Attendance</button>
+                    </form>
+                </div>
+                
+                <div class="card-panel">
+                    <h3 class="card-title">Import Attendance CSV</h3>
+                    <form id="attendanceCsvForm">
+                        <div class="form-group">
+                            <input class="input" id="attendanceFile" type="file" accept=".csv,text/csv" required />
+                        </div>
+                        <button class="btn" type="submit">Upload CSV</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Attendance Table for Admin -->
+            <div class="card-panel" style="padding:0; border:none; background:transparent; margin-top:20px;">
+                <h3 class="card-title" style="margin-bottom:12px;">All Attendance Records</h3>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Course Name</th>
+                                <th>Course Code</th>
+                                <th style="width:100px;">Attendance %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceAdminBody">
+                            <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 
+             TAB: My Attendance (Student Only)
+        -->
+        <div id="view-attendance-student" class="tab-content hidden">
+            <div class="card-panel">
+                <h3 class="card-title">My Attendance</h3>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Course Name</th>
+                                <th style="width:100px;">Attendance %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceStudentBody">
+                            <tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -311,8 +433,14 @@
             });
 
             // Special Loaders
+            if (tabId === 'import') {
+                loadAllStudents();
+                loadAllFaculties();
+            }
             if (tabId === 'course-admin' || tabId === 'courses') loadCourses();
             if (tabId === 'finance') loadFinance();
+            if (tabId === 'attendance-admin') loadAttendanceAdmin();
+            if (tabId === 'attendance-student') loadAttendanceStudent();
         }
 
         function renderNav(role) {
@@ -323,7 +451,8 @@
                 links = [
                     { label: 'Data Import', id: 'import' },
                     { label: 'Course Administration', id: 'course-admin' },
-                    { label: 'Finance', id: 'finance' }
+                    { label: 'Finance', id: 'finance' },
+                    { label: 'Attendance', id: 'attendance-admin' }
                 ];
             } else {
                 // Faculty or Student -> "List of courses" + "My Courses"
@@ -331,6 +460,9 @@
                     { label: 'All Courses', id: 'courses' },
                     { label: role === 'FACULTY' ? 'My Assigned Courses' : 'My Enrolled Courses', url: '/my-courses' }
                 ];
+                if (role === 'STUDENT') {
+                    links.push({ label: 'My Attendance', id: 'attendance-student' });
+                }
             }
 
             navMenu.innerHTML = links.map(l => {
@@ -526,14 +658,125 @@
             }
         }
 
+        // --- Attendance APIs ---
+        async function loadAttendanceAdmin() {
+            const tbody = document.getElementById('attendanceAdminBody');
+            if(!tbody) return;
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>`;
+
+            const res = await apiCall('/admin/attendance');
+            if (!res || !res.ok) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--danger);">Failed to load</td></tr>`;
+                return;
+            }
+            const records = JSON.parse(res.text);
+
+            if (records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No attendance records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = records.map(r => `
+                <tr>
+                    <td>${r.studentName || '-'}</td>
+                    <td>${r.courseName || '-'}</td>
+                    <td><span style="font-family:monospace; background:#222; padding:2px 6px; border-radius:4px;">${r.courseCode || '-'}</span></td>
+                    <td style="${r.attendancePercentage < 75 ? 'color:var(--danger);font-weight:bold;' : 'color:#6ee7b7;'}">${r.attendancePercentage}%</td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadAttendanceStudent() {
+            const tbody = document.getElementById('attendanceStudentBody');
+            if(!tbody) return;
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>`;
+
+            const res = await apiCall('/student/attendance');
+            if (!res || !res.ok) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--danger);">Failed to load</td></tr>`;
+                return;
+            }
+            const records = JSON.parse(res.text);
+
+            if (records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">No attendance records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = records.map(r => `
+                <tr>
+                    <td><span style="font-family:monospace; background:#222; padding:2px 6px; border-radius:4px;">${r.courseCode || '-'}</span></td>
+                    <td>${r.courseName || '-'}</td>
+                    <td style="${r.attendancePercentage < 75 ? 'color:var(--danger);font-weight:bold;' : 'color:#6ee7b7;'}">${r.attendancePercentage}%</td>
+                </tr>
+            `).join('');
+        }
+
         // Forms Config
         const forms = {
-            studentsForm: { url: '/students/csv', type: 'file', fileId: 'studentsFile' },
-            facultiesForm: { url: '/faculties/csv', type: 'file', fileId: 'facultiesFile' },
-            singleStudentForm: { url: '/student/csv', type: 'json', fields: ['studentName', 'studentDob', 'studentEmail', 'studentStatus'], map: { studentName: 'name', studentDob: 'dateOfBirth', studentEmail: 'email', studentStatus: 'enrolmentStatus' } },
-            singleFacultyForm: { url: '/faculty/csv', type: 'json', fields: ['facultyName', 'facultyEmail', 'facultyDepartment', 'facultyDesignation'], map: { facultyName: 'name', facultyEmail: 'email', facultyDepartment: 'department', facultyDesignation: 'designation' } },
-            addCourseForm: { url: '/post/course', type: 'json', fields: ['courseName', 'courseCode', 'courseCredits'], map: { courseCredits: (v) => parseInt(v) }, success: loadCourses }
+            studentsForm: { url: '/students/csv', type: 'file', fileId: 'studentsFile', success: loadAllStudents },
+            facultiesForm: { url: '/faculties/csv', type: 'file', fileId: 'facultiesFile', success: loadAllFaculties },
+            singleStudentForm: { url: '/student/csv', type: 'json', fields: ['studentName', 'studentDob', 'studentEmail', 'studentStatus'], map: { studentName: 'name', studentDob: 'dateOfBirth', studentEmail: 'email', studentStatus: 'enrolmentStatus' }, success: loadAllStudents },
+            singleFacultyForm: { url: '/faculty/csv', type: 'json', fields: ['facultyName', 'facultyEmail', 'facultyDepartment', 'facultyDesignation'], map: { facultyName: 'name', facultyEmail: 'email', facultyDepartment: 'department', facultyDesignation: 'designation' }, success: loadAllFaculties },
+            addCourseForm: { url: '/post/course', type: 'json', fields: ['courseName', 'courseCode', 'courseCredits'], map: { courseCredits: (v) => parseInt(v) }, success: loadCourses },
+            attendanceCsvForm: { url: '/admin/attendance/csv', type: 'file', fileId: 'attendanceFile', success: loadAttendanceAdmin },
+            singleAttendanceForm: { url: '/admin/attendance', type: 'json', fields: ['attStudentId', 'attCourseId', 'attPercentage'], map: { attStudentId: (v)=>parseInt(v), attCourseId: (v)=>parseInt(v), attPercentage: (v)=>parseFloat(v) }, mapKeys: { attStudentId: 'studentId', attCourseId: 'courseId', attPercentage: 'attendance' }, success: loadAttendanceAdmin }
         };
+
+        // --- Load Users APIs ---
+        async function loadAllStudents() {
+            const tbody = document.getElementById('studentsAdminBody');
+            if(!tbody) return;
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>`;
+
+            const res = await apiCall('/admin/students');
+            if (!res || !res.ok) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--danger);">Failed to load</td></tr>`;
+                return;
+            }
+            const records = JSON.parse(res.text);
+
+            if (records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No students found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = records.map(s => `
+                <tr>
+                    <td>${s.name || '-'}</td>
+                    <td>${s.email || '-'}</td>
+                    <td>${s.department || '-'}</td>
+                    <td>${s.enrolmentStatus || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadAllFaculties() {
+            const tbody = document.getElementById('facultiesAdminBody');
+            if(!tbody) return;
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>`;
+
+            const res = await apiCall('/admin/faculties');
+            if (!res || !res.ok) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--danger);">Failed to load</td></tr>`;
+                return;
+            }
+            const records = JSON.parse(res.text);
+
+            if (records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No faculties found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = records.map(f => `
+                <tr>
+                    <td>${f.name || '-'}</td>
+                    <td>${f.email || '-'}</td>
+                    <td>${f.department || '-'}</td>
+                    <td>${f.designation || '-'}</td>
+                </tr>
+            `).join('');
+        }
 
         // Attach Listeners
         Object.entries(forms).forEach(([id, config]) => {
@@ -563,6 +806,11 @@
                                 else finalKey = config.map[k];
                             }
                         }
+                        
+                        if (config.mapKeys && config.mapKeys[f]) {
+                            finalKey = config.mapKeys[f];
+                        }
+
                         if (!finalKey) finalKey = config.map[f] || f;
 
                         body[finalKey] = finalVal;
