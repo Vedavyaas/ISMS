@@ -6,6 +6,7 @@ import com.adl.isms.assests.EnrolmentStatus;
 import com.adl.isms.assests.Role;
 import com.adl.isms.repository.*;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Random;
 
 @Component
+@Order(1)
 public class UserDataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;

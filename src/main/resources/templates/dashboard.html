@@ -362,6 +362,73 @@
             </div>
         </div>
 
+        <!--
+             TAB: Grade Administration (Admin Only)
+        -->
+        <div id="view-grade-admin" class="tab-content hidden">
+            <div class="grid-2">
+                <div class="card-panel">
+                    <h3 class="card-title">Update Single Grade</h3>
+                    <form id="singleGradeForm">
+                        <div class="grid-2" style="margin-bottom:12px;">
+                            <div>
+                                <label class="label">Student ID</label>
+                                <input class="input" id="gradeStudentId" type="number" required />
+                            </div>
+                            <div>
+                                <label class="label">Course ID</label>
+                                <input class="input" id="gradeCourseId" type="number" required />
+                            </div>
+                        </div>
+                        <div class="grid-2" style="margin-bottom:12px;">
+                            <div>
+                                <label class="label">Marks Obtained (0–100)</label>
+                                <input class="input" id="gradeMarks" type="number" step="0.01" min="0" max="100" required />
+                            </div>
+                            <div>
+                                <label class="label">Grade Point (0–10)</label>
+                                <input class="input" id="gradePoint" type="number" step="0.01" min="0" max="10" required />
+                            </div>
+                        </div>
+                        <button class="btn" type="submit">Save Grade</button>
+                    </form>
+                </div>
+
+                <div class="card-panel">
+                    <h3 class="card-title">Import Grades CSV</h3>
+                    <p class="label" style="margin-bottom:10px;">CSV columns: <code>studentId, courseId, marksObtained, gradePoint</code></p>
+                    <form id="gradeCsvForm">
+                        <div class="form-group">
+                            <input class="input" id="gradeFile" type="file" accept=".csv,text/csv" required />
+                        </div>
+                        <button class="btn" type="submit">Upload CSV</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Grade Table for Admin -->
+            <div class="card-panel" style="padding:0; border:none; background:transparent; margin-top:20px;">
+                <h3 class="card-title" style="margin-bottom:12px;">All Grade Records</h3>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Course Name</th>
+                                <th>Code</th>
+                                <th style="width:100px;">Marks</th>
+                                <th style="width:90px;">Grade Pt</th>
+                                <th style="width:80px;">Letter</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gradeAdminBody">
+                            <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- 
              TAB: My Attendance (Student Only)
         -->
@@ -379,6 +446,33 @@
                         </thead>
                         <tbody id="attendanceStudentBody">
                             <tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!--
+             TAB: My Grades (Student Only)
+        -->
+        <div id="view-my-grades" class="tab-content hidden">
+            <div class="card-panel">
+                <h3 class="card-title">My Grades</h3>
+                <div id="gradesGlobalMsg" class="hidden" style="padding:16px; border-radius:8px; margin-bottom:16px;"></div>
+                <div class="table-container">
+                    <table class="table" id="myGradesTable">
+                        <thead>
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Course Name</th>
+                                <th style="width:90px;">Marks</th>
+                                <th style="width:80px;">Grade Pt</th>
+                                <th style="width:70px;">Letter</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="myGradesBody">
+                            <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -441,6 +535,8 @@
             if (tabId === 'finance') loadFinance();
             if (tabId === 'attendance-admin') loadAttendanceAdmin();
             if (tabId === 'attendance-student') loadAttendanceStudent();
+            if (tabId === 'grade-admin') loadGradeAdmin();
+            if (tabId === 'my-grades') loadMyGrades();
         }
 
         function renderNav(role) {
@@ -452,7 +548,8 @@
                     { label: 'Data Import', id: 'import' },
                     { label: 'Course Administration', id: 'course-admin' },
                     { label: 'Finance', id: 'finance' },
-                    { label: 'Attendance', id: 'attendance-admin' }
+                    { label: 'Attendance', id: 'attendance-admin' },
+                    { label: 'Grades', id: 'grade-admin' }
                 ];
             } else {
                 // Faculty or Student -> "List of courses" + "My Courses"
@@ -462,6 +559,7 @@
                 ];
                 if (role === 'STUDENT') {
                     links.push({ label: 'My Attendance', id: 'attendance-student' });
+                    links.push({ label: 'My Grades', id: 'my-grades' });
                 }
             }
 
@@ -712,6 +810,118 @@
             `).join('');
         }
 
+        // ─── Grade Admin ──────────────────────────────────────────────────────
+        async function loadGradeAdmin() {
+            const tbody = document.getElementById('gradeAdminBody');
+            if (!tbody) return;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>`;
+
+            const res = await apiCall('/admin/grades');
+            if (!res || !res.ok) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--danger);">Failed to load</td></tr>`;
+                return;
+            }
+            const records = JSON.parse(res.text);
+            if (records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No grade records found.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = records.map(r => {
+                const letterColor = r.letterGrade === 'F' ? 'var(--danger)' : r.letterGrade === 'O' || r.letterGrade === 'A+' ? '#6ee7b7' : 'var(--accent)';
+                return `
+                <tr>
+                    <td style="font-weight:500;">${r.studentName || '-'}</td>
+                    <td>${r.courseName || '-'}</td>
+                    <td><span style="font-family:monospace; background:#222; padding:2px 6px; border-radius:4px;">${r.courseCode || '-'}</span></td>
+                    <td>${r.marksObtained ?? '-'}</td>
+                    <td>${r.gradePoint ?? '-'}</td>
+                    <td><span style="font-weight:700; color:${letterColor};">${r.letterGrade || '-'}</span></td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ─── Student: My Grades ───────────────────────────────────────────────
+        async function loadMyGrades() {
+            const tbody = document.getElementById('myGradesBody');
+            const globalMsg = document.getElementById('gradesGlobalMsg');
+            const table = document.getElementById('myGradesTable');
+            if (!tbody) return;
+
+            globalMsg.className = 'hidden';
+            table.style.display = '';
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>`;
+
+            const res = await apiCall('/student/grades');
+            if (!res || !res.ok) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--danger);">Failed to load grades.</td></tr>`;
+                return;
+            }
+            const results = JSON.parse(res.text);
+
+            if (results.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No grade records found yet. Grades are seeded shortly after startup.</td></tr>`;
+                return;
+            }
+
+            // Check if ALL rows are finance-locked → show a top banner too
+            const allFinanceLocked = results.every(r => r.lockType === 'FINANCE_PENDING');
+            if (allFinanceLocked) {
+                globalMsg.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:12px; padding:14px 18px;
+                        background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.3); border-radius:8px;">
+                        <span style="font-size:1.4rem;">🔒</span>
+                        <div>
+                            <div style="font-weight:700; color:var(--danger); margin-bottom:2px;">All Grades Locked — Fees Pending</div>
+                            <div style="font-size:12px; color:var(--text-muted);">${results[0].reason}</div>
+                        </div>
+                    </div>`;
+                globalMsg.className = '';
+            }
+
+            tbody.innerHTML = results.map(r => {
+                if (!r.visible) {
+                    const isFinance = r.lockType === 'FINANCE_PENDING';
+                    const badgeColor  = isFinance ? '#ef4444' : '#f59e0b';
+                    const badgeBg     = isFinance ? 'rgba(239,68,68,.12)' : 'rgba(245,158,11,.12)';
+                    const badgeLabel  = isFinance ? '🔒 Fees Pending' : '🔒 Low Attendance';
+
+                    return `
+                    <tr style="opacity:0.75;">
+                        <td><span style="font-family:monospace; background:#222; padding:2px 6px; border-radius:4px;">${r.courseCode || '-'}</span></td>
+                        <td style="font-weight:500;">${r.courseName || '-'}</td>
+                        <td style="text-align:center; color:var(--text-muted); font-style:italic;">—</td>
+                        <td style="text-align:center; color:var(--text-muted); font-style:italic;">—</td>
+                        <td style="text-align:center; color:var(--text-muted); font-style:italic;">—</td>
+                        <td>
+                            <span style="display:inline-flex; align-items:center; gap:5px;
+                                background:${badgeBg}; color:${badgeColor};
+                                padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap;">
+                                ${badgeLabel}
+                            </span>
+                            <div style="font-size:11px; color:var(--text-muted); margin-top:4px; max-width:260px;">${r.reason}</div>
+                        </td>
+                    </tr>`;
+                }
+
+                const g = r.grade;
+                const letterColor = g.letterGrade === 'F' ? 'var(--danger)'
+                    : (g.letterGrade === 'O' || g.letterGrade === 'A+') ? '#6ee7b7'
+                    : 'var(--accent)';
+                return `
+                <tr>
+                    <td><span style="font-family:monospace; background:#222; padding:2px 6px; border-radius:4px;">${g.courseCode}</span></td>
+                    <td style="font-weight:500;">${g.courseName}</td>
+                    <td>${g.marksObtained}</td>
+                    <td>${g.gradePoint}</td>
+                    <td><span style="font-weight:700; color:${letterColor};">${g.letterGrade}</span></td>
+                    <td>
+                        <span style="background:rgba(110,231,183,.15); color:#6ee7b7; padding:3px 10px;
+                            border-radius:20px; font-size:11px; font-weight:600;">✓ Unlocked</span>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
         // Forms Config
         const forms = {
             studentsForm: { url: '/students/csv', type: 'file', fileId: 'studentsFile', success: loadAllStudents },
@@ -720,7 +930,9 @@
             singleFacultyForm: { url: '/faculty/csv', type: 'json', fields: ['facultyName', 'facultyEmail', 'facultyDepartment', 'facultyDesignation'], map: { facultyName: 'name', facultyEmail: 'email', facultyDepartment: 'department', facultyDesignation: 'designation' }, success: loadAllFaculties },
             addCourseForm: { url: '/post/course', type: 'json', fields: ['courseName', 'courseCode', 'courseCredits'], map: { courseCredits: (v) => parseInt(v) }, success: loadCourses },
             attendanceCsvForm: { url: '/admin/attendance/csv', type: 'file', fileId: 'attendanceFile', success: loadAttendanceAdmin },
-            singleAttendanceForm: { url: '/admin/attendance', type: 'json', fields: ['attStudentId', 'attCourseId', 'attPercentage'], map: { attStudentId: (v)=>parseInt(v), attCourseId: (v)=>parseInt(v), attPercentage: (v)=>parseFloat(v) }, mapKeys: { attStudentId: 'studentId', attCourseId: 'courseId', attPercentage: 'attendance' }, success: loadAttendanceAdmin }
+            singleAttendanceForm: { url: '/admin/attendance', type: 'json', fields: ['attStudentId', 'attCourseId', 'attPercentage'], map: { attStudentId: (v)=>parseInt(v), attCourseId: (v)=>parseInt(v), attPercentage: (v)=>parseFloat(v) }, mapKeys: { attStudentId: 'studentId', attCourseId: 'courseId', attPercentage: 'attendance' }, success: loadAttendanceAdmin },
+            singleGradeForm: { url: '/admin/grades', type: 'json', fields: ['gradeStudentId', 'gradeCourseId', 'gradeMarks', 'gradePoint'], map: { gradeStudentId: (v)=>parseInt(v), gradeCourseId: (v)=>parseInt(v), gradeMarks: (v)=>parseFloat(v), gradePoint: (v)=>parseFloat(v) }, mapKeys: { gradeStudentId: 'studentId', gradeCourseId: 'courseId', gradeMarks: 'marksObtained', gradePoint: 'gradePoint' }, success: loadGradeAdmin },
+            gradeCsvForm: { url: '/admin/grades/csv', type: 'file', fileId: 'gradeFile', success: loadGradeAdmin }
         };
 
         // --- Load Users APIs ---

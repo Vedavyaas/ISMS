@@ -4,12 +4,14 @@ package com.adl.isms.configuration;
 import com.adl.isms.repository.CourseEntity;
 import com.adl.isms.repository.CourseRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@Order(2)
 public class CourseDataInitializer implements CommandLineRunner {
 
     private final CourseRepository courseRepository;

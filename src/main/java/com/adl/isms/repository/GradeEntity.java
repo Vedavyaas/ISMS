@@ -11,7 +11,7 @@ public class GradeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", referencedColumnName = "id")
     private StudentEntity student;
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", referencedColumnName = "id")
     private CourseEntity course;
     private double marksObtained;
