@@ -314,12 +314,16 @@
                     <form id="singleAttendanceForm">
                         <div class="grid-2" style="margin-bottom:12px;">
                             <div>
-                                <label class="label">Student ID</label>
-                                <input class="input" id="attStudentId" type="number" required />
+                                <label class="label">Student Name</label>
+                                <select class="input" id="attStudentId" required>
+                                    <option value="" disabled selected>Select Student...</option>
+                                </select>
                             </div>
                             <div>
-                                <label class="label">Course ID</label>
-                                <input class="input" id="attCourseId" type="number" required />
+                                <label class="label">Course</label>
+                                <select class="input" id="attCourseId" required>
+                                    <option value="" disabled selected>Select Course...</option>
+                                </select>
                             </div>
                         </div>
                         <div class="form-group">
@@ -372,12 +376,16 @@
                     <form id="singleGradeForm">
                         <div class="grid-2" style="margin-bottom:12px;">
                             <div>
-                                <label class="label">Student ID</label>
-                                <input class="input" id="gradeStudentId" type="number" required />
+                                <label class="label">Student Name</label>
+                                <select class="input" id="gradeStudentId" required>
+                                    <option value="" disabled selected>Select Student...</option>
+                                </select>
                             </div>
                             <div>
-                                <label class="label">Course ID</label>
-                                <input class="input" id="gradeCourseId" type="number" required />
+                                <label class="label">Course</label>
+                                <select class="input" id="gradeCourseId" required>
+                                    <option value="" disabled selected>Select Course...</option>
+                                </select>
                             </div>
                         </div>
                         <div class="grid-2" style="margin-bottom:12px;">
@@ -457,7 +465,10 @@
         -->
         <div id="view-my-grades" class="tab-content hidden">
             <div class="card-panel">
-                <h3 class="card-title">My Grades</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h3 class="card-title" style="margin:0;">My Grades</h3>
+                    <button id="printGradesBtn" class="btn btn-secondary" onclick="printMyGrades()" style="display:none; padding: 6px 12px; font-size: 12px;">Print Grades</button>
+                </div>
                 <div id="gradesGlobalMsg" class="hidden" style="padding:16px; border-radius:8px; margin-bottom:16px;"></div>
                 <div class="table-container">
                     <table class="table" id="myGradesTable">
@@ -475,6 +486,70 @@
                             <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!--
+             TAB: Faculty Grades (Faculty Only)
+        -->
+        <div id="view-faculty-grades" class="tab-content hidden">
+            <div class="card-panel">
+                <h3 class="card-title" style="margin-bottom:12px;">Student Grades for My Courses</h3>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Course Name</th>
+                                <th>Code</th>
+                                <th style="width:100px;">Marks</th>
+                                <th style="width:90px;">Grade Pt</th>
+                                <th style="width:80px;">Letter</th>
+                            </tr>
+                        </thead>
+                        <tbody id="facultyGradesBody">
+                            <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!--
+             TAB: AI Advisor Chatbot (Student Only)
+        -->
+        <div id="view-ai-advisor" class="tab-content hidden">
+            <div class="card-panel" style="display:flex; flex-direction:column; height:600px; padding:20px;">
+                <h3 class="card-title" style="margin-bottom:4px;">🤖 AI Academic Advisor</h3>
+                <p class="label" style="margin-bottom:16px; color:var(--text-muted);">Ask me anything about your attendance, grades, fees or academic performance.</p>
+
+                <!-- Chat Message Window -->
+                <div id="chatMessages"
+                     style="flex:1; overflow-y:auto; border:1px solid rgba(255,255,255,0.08);
+                            border-radius:10px; padding:16px; background:rgba(255,255,255,0.03);
+                            display:flex; flex-direction:column; gap:12px; margin-bottom:16px;">
+                    <div class="chat-bubble chat-bot" style="align-self:flex-start; max-width:75%;
+                         background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3);
+                         padding:12px 16px; border-radius:0 14px 14px 14px; font-size:13px; line-height:1.6;">
+                        👋 Hi! I'm your AI Academic Advisor. I have access to your attendance, grades, and finance data. What would you like to know?
+                    </div>
+                </div>
+
+                <!-- Input Row -->
+                <div style="display:flex; gap:10px; align-items:flex-end;">
+                    <textarea id="chatInput"
+                        placeholder="e.g. Which courses have low attendance? How can I improve my CGPA?"
+                        rows="2"
+                        style="flex:1; resize:none; border-radius:10px; padding:12px 14px;
+                               background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12);
+                               color:var(--text-main); font-size:13px; font-family:inherit; line-height:1.5;"
+                        onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendChat(); }"
+                    ></textarea>
+                    <button id="chatSendBtn" class="btn" onclick="sendChat()"
+                            style="padding:12px 20px; border-radius:10px; font-size:13px; white-space:nowrap;">
+                        Send ↵
+                    </button>
                 </div>
             </div>
         </div>
@@ -537,6 +612,8 @@
             if (tabId === 'attendance-student') loadAttendanceStudent();
             if (tabId === 'grade-admin') loadGradeAdmin();
             if (tabId === 'my-grades') loadMyGrades();
+            if (tabId === 'faculty-grades') loadFacultyGrades();
+            if (tabId === 'ai-advisor') initChat();
         }
 
         function renderNav(role) {
@@ -560,6 +637,10 @@
                 if (role === 'STUDENT') {
                     links.push({ label: 'My Attendance', id: 'attendance-student' });
                     links.push({ label: 'My Grades', id: 'my-grades' });
+                    links.push({ label: '🤖 AI Advisor', id: 'ai-advisor' });
+                }
+                if (role === 'FACULTY') {
+                    links.push({ label: 'Student Grades', id: 'faculty-grades' });
                 }
             }
 
@@ -585,6 +666,7 @@
                 userRoleBadge.textContent = 'Administrator';
                 userRoleBadge.style.color = '#fcb_00';
                 userRoleBadge.style.borderColor = 'rgba(255, 200, 0, 0.4)';
+                setTimeout(loadAdminDropdowns, 100);
             } else if (roles.includes('ROLE_FACULTY')) {
                 CURRENT_ROLE = 'FACULTY';
                 userRoleBadge.textContent = 'Faculty';
@@ -595,6 +677,35 @@
             }
 
             renderNav(CURRENT_ROLE);
+        }
+
+        async function loadAdminDropdowns() {
+            try {
+                const [studentsRes, coursesRes] = await Promise.all([
+                    apiCall('/admin/students'),
+                    apiCall('/get/courses')
+                ]);
+                if (studentsRes && studentsRes.ok) {
+                    const students = JSON.parse(studentsRes.text);
+                    const options = `<option value="" disabled selected>Select Student...</option>` + 
+                        students.map(s => `<option value="${s.id}">${s.name} (${s.email})</option>`).join('');
+                    const attSelect = document.getElementById('attStudentId');
+                    const gradeSelect = document.getElementById('gradeStudentId');
+                    if (attSelect) attSelect.innerHTML = options;
+                    if (gradeSelect) gradeSelect.innerHTML = options;
+                }
+                if (coursesRes && coursesRes.ok) {
+                    const courses = JSON.parse(coursesRes.text);
+                    const options = `<option value="" disabled selected>Select Course...</option>` + 
+                        courses.map(c => `<option value="${c.id}">${c.courseCode} - ${c.courseName}</option>`).join('');
+                    const attSelect = document.getElementById('attCourseId');
+                    const gradeSelect = document.getElementById('gradeCourseId');
+                    if (attSelect) attSelect.innerHTML = options;
+                    if (gradeSelect) gradeSelect.innerHTML = options;
+                }
+            } catch (e) {
+                console.error("Failed to load dropdowns", e);
+            }
         }
 
         // --- API Calls ---
@@ -845,10 +956,12 @@
             const tbody = document.getElementById('myGradesBody');
             const globalMsg = document.getElementById('gradesGlobalMsg');
             const table = document.getElementById('myGradesTable');
+            const printBtn = document.getElementById('printGradesBtn');
             if (!tbody) return;
 
             globalMsg.className = 'hidden';
             table.style.display = '';
+            if (printBtn) printBtn.style.display = 'none';
             tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>`;
 
             const res = await apiCall('/student/grades');
@@ -857,6 +970,7 @@
                 return;
             }
             const results = JSON.parse(res.text);
+            window.currentGrades = results;
 
             if (results.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No grade records found yet. Grades are seeded shortly after startup.</td></tr>`;
@@ -920,7 +1034,172 @@
                     </td>
                 </tr>`;
             }).join('');
+
+            if (results.some(r => r.visible) && printBtn) {
+                printBtn.style.display = 'inline-block';
+            }
         }
+
+        window.printMyGrades = () => {
+            const results = window.currentGrades || [];
+            const visibleGrades = results.filter(r => r.visible);
+            if (visibleGrades.length === 0) {
+                showMessage("No visible grades to print.", "error");
+                return;
+            }
+
+            const studentName = visibleGrades[0].grade.studentName || 'Student';
+
+            let printWin = window.open('', '_blank');
+            printWin.document.write(`
+                <html>
+                <head>
+                    <title>Grades - ${studentName}</title>
+                    <style>
+                        body { font-family: sans-serif; padding: 20px; color: #333; }
+                        h1 { text-align: center; }
+                        h2 { text-align: center; color: #555; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                        th { background-color: #f8f9fa; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Academic Grades Report</h1>
+                    <h2>Student Name: ${studentName}</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Course Name</th>
+                                <th>Marks Obtained</th>
+                                <th>Grade Point</th>
+                                <th>Letter Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${visibleGrades.map(r => `
+                                <tr>
+                                    <td>${r.courseCode}</td>
+                                    <td>${r.courseName}</td>
+                                    <td>${r.grade.marksObtained}</td>
+                                    <td>${r.grade.gradePoint}</td>
+                                    <td><strong>${r.grade.letterGrade}</strong></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <p style="margin-top: 20px; text-align: center; font-size: 12px; color: #777;">
+                        This report only includes grades for courses where fees have been paid and attendance is above 75%.
+                    </p>
+                </body>
+                </html>
+            `);
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(() => {
+                printWin.print();
+                printWin.close();
+            }, 250);
+        };
+
+        // ─── Faculty: Student Grades ──────────────────────────────────────────
+        async function loadFacultyGrades() {
+            const tbody = document.getElementById('facultyGradesBody');
+            if (!tbody) return;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>`;
+
+            const res = await apiCall('/faculty/grades');
+            if (!res || !res.ok) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--danger);">Failed to load grades.</td></tr>`;
+                return;
+            }
+            const records = JSON.parse(res.text);
+
+            if (records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No student grades found for your courses.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = records.map(r => {
+                const letterColor = r.letterGrade === 'F' ? 'var(--danger)' : (r.letterGrade === 'O' || r.letterGrade === 'A+') ? '#6ee7b7' : 'var(--accent)';
+                return `
+                <tr>
+                    <td style="font-weight:500;">${r.studentName || '-'}</td>
+                    <td>${r.courseName || '-'}</td>
+                    <td><span style="font-family:monospace; background:#222; padding:2px 6px; border-radius:4px;">${r.courseCode || '-'}</span></td>
+                    <td>${r.marksObtained ?? '-'}</td>
+                    <td>${r.gradePoint ?? '-'}</td>
+                    <td><span style="font-weight:700; color:${letterColor};">${r.letterGrade || '-'}</span></td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ─── AI Advisor Chatbot ───────────────────────────────────────────────
+        function initChat() {
+            // No-op; chat is already shown with the welcome message
+        }
+
+        function appendMessage(text, sender) {
+            const container = document.getElementById('chatMessages');
+            const isBot = sender === 'bot';
+            const bubble = document.createElement('div');
+            bubble.style.cssText = [
+                'align-self:' + (isBot ? 'flex-start' : 'flex-end'),
+                'max-width:78%',
+                'padding:12px 16px',
+                'border-radius:' + (isBot ? '0 14px 14px 14px' : '14px 14px 0 14px'),
+                'font-size:13px',
+                'line-height:1.6',
+                'white-space:pre-wrap',
+                isBot
+                    ? 'background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);'
+                    : 'background:rgba(110,231,183,0.12);border:1px solid rgba(110,231,183,0.25);'
+            ].join(';');
+            bubble.textContent = text;
+            container.appendChild(bubble);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function appendTypingIndicator() {
+            const container = document.getElementById('chatMessages');
+            const indicator = document.createElement('div');
+            indicator.id = 'chatTyping';
+            indicator.style.cssText = 'align-self:flex-start;padding:10px 16px;border-radius:0 14px 14px 14px;' +
+                'background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);font-size:12px;color:var(--text-muted);';
+            indicator.textContent = '⏳ AI is thinking...';
+            container.appendChild(indicator);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const el = document.getElementById('chatTyping');
+            if (el) el.remove();
+        }
+
+        window.sendChat = async () => {
+            const input = document.getElementById('chatInput');
+            const btn = document.getElementById('chatSendBtn');
+            const question = input.value.trim();
+            if (!question) return;
+
+            appendMessage(question, 'user');
+            input.value = '';
+            btn.disabled = true;
+            btn.textContent = '...';
+            appendTypingIndicator();
+
+            const res = await apiCall(`/get/suggestion?question=${encodeURIComponent(question)}`);
+            removeTypingIndicator();
+            btn.disabled = false;
+            btn.textContent = 'Send ↵';
+
+            if (!res || !res.ok) {
+                appendMessage('⚠️ Failed to get a response. Please try again.', 'bot');
+            } else {
+                appendMessage(res.text, 'bot');
+            }
+        };
 
         // Forms Config
         const forms = {

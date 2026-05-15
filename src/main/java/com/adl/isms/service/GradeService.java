@@ -25,17 +25,20 @@ public class GradeService {
     private final CourseRepository courseRepository;
     private final AttendanceRepository attendanceRepository;
     private final FinanceRepository financeRepository;
+    private final EnrolmentRepository enrolmentRepository;
 
     public GradeService(GradeRepository gradeRepository,
                         StudentRepository studentRepository,
                         CourseRepository courseRepository,
                         AttendanceRepository attendanceRepository,
-                        FinanceRepository financeRepository) {
+                        FinanceRepository financeRepository,
+                        EnrolmentRepository enrolmentRepository) {
         this.gradeRepository = gradeRepository;
         this.studentRepository = studentRepository;
         this.courseRepository = courseRepository;
         this.attendanceRepository = attendanceRepository;
         this.financeRepository = financeRepository;
+        this.enrolmentRepository = enrolmentRepository;
     }
 
     // ─── Admin: update single grade ─────────────────────────────────────────
@@ -158,6 +161,23 @@ public class GradeService {
 
             return new StudentGradeResult(toViewDTO(g));
         }).toList();
+    }
+
+    // ─── Faculty: view grades of students in their courses ──────────────────
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_FACULTY')")
+    public List<GradeViewDTO> getFacultyGrades() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<EnrolmentEntity> enrolments = enrolmentRepository.findAllByFacultyEntity_User_UserName(username);
+        
+        List<GradeViewDTO> facultyGrades = new java.util.ArrayList<>();
+        for (EnrolmentEntity enrolment : enrolments) {
+            Optional<GradeEntity> grade = gradeRepository.findByStudent_IdAndCourse_Id(
+                enrolment.getStudent().getId(), 
+                enrolment.getCourse().getId()
+            );
+            grade.ifPresent(g -> facultyGrades.add(toViewDTO(g)));
+        }
+        return facultyGrades;
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
